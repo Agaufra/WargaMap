@@ -99,16 +99,20 @@ const MapDashboard = ({
     }, 30000); // 30 seconds
   };
 
-  // Resolves coordinates into a district/city name
+  // Resolves coordinates into a detailed street/district/city name
   const fetchRegionName = async (lat, lng) => {
     try {
-      const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10`);
-      const address = res.data.address;
-      const contextName = address.city || address.town || address.state_district || address.county || 'Unknown Region';
-      setRegionName(contextName);
+      const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18`);
+      const address = res.data?.address || {};
+      const road = address.road || address.pedestrian || '';
+      const suburb = address.suburb || address.neighbourhood || address.village || '';
+      const city = address.city || address.town || address.state_district || address.county || '';
+      
+      const fullPlace = [road, suburb, city].filter(Boolean).join(', ');
+      setRegionName(fullPlace || 'Lokasi Tidak Diketahui');
     } catch (err) {
       console.error('Reverse Geocode failed', err);
-      setRegionName('Local Region');
+      setRegionName('Area Terdeteksi');
     }
   };
 
@@ -267,9 +271,10 @@ const MapDashboard = ({
             zIndexOffset={1000}
           >
             <Popup>
-              <div style={{ textAlign: 'center', color: '#333' }}>
-                <strong>Lokasi Terdeteksi</strong><br />
-                Titik Fokus Intelijen
+              <div style={{ textAlign: 'center', color: '#333', minWidth: '180px' }}>
+                <strong style={{ fontSize: '0.8rem', color: '#111' }}>Informasi Lokasi & Jalan</strong><br />
+                <div style={{ fontSize: '0.85rem', marginTop: '6px', color: '#2563eb', fontWeight: 'bold' }}>{regionName}</div>
+                <div style={{ fontSize: '0.65rem', color: '#666', marginTop: '6px' }}>Titik Fokus Pantauan</div>
               </div>
             </Popup>
           </Marker>
