@@ -100,7 +100,9 @@ const RoutingControl = ({ waypoints, onWaypointsChange, travelMode = 'car', onRo
 
       routingControl = L.Routing.control({
         waypoints: normalizedWaypoints,
-        router: tomtomRouter,
+        router: tomtomKey ? tomtomRouter : new L.Routing.OSRMv1({
+          serviceUrl: 'https://router.project-osrm.org/route/v1'
+        }),
         position: 'topleft',
         lineOptions: {
           styles: [{ color: "#3b82f6", weight: 6, opacity: 0.8 }]
@@ -132,8 +134,22 @@ const RoutingControl = ({ waypoints, onWaypointsChange, travelMode = 'car', onRo
         routeWhileDragging: true,
         fitSelectedRoutes: true,
         showAlternatives: false,
-        containerClassName: 'routing-panel-container hidden-routing-panel' // Add a class to hide it via CSS
+        containerClassName: 'routing-panel-container hidden-routing-panel'
       }).addTo(map);
+
+      routingControl.on('routesfound', (e) => {
+        const routes = e.routes;
+        if (routes && routes.length > 0) {
+          const summary = routes[0].summary;
+          if (onRouteFound) {
+            onRouteFound({
+              distance: summary.totalDistance,
+              time: summary.totalTime,
+              instructions: routes[0].instructions || []
+            });
+          }
+        }
+      });
 
       // Hide the default UI
       const container = document.querySelector('.hidden-routing-panel');

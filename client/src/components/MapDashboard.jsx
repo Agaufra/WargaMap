@@ -80,6 +80,7 @@ const MapDashboard = ({
   // Routing Panel States
   const [routeStats, setRouteStats] = useState(null);
   const [travelMode, setTravelMode] = useState('car');
+  const [myLocation, setMyLocation] = useState(null);
 
 
 
@@ -203,6 +204,7 @@ const MapDashboard = ({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        setMyLocation({ lat: latitude, lng: longitude });
         onViewChange([latitude, longitude], 13, 'detect'); // Tidak pass initialLoc agar marker tidak muncul di awal
         fetchRegionName(latitude, longitude);
         fetchSmartCityData();
@@ -294,7 +296,31 @@ const MapDashboard = ({
               <div style={{ textAlign: 'center', color: '#333', minWidth: '180px' }}>
                 <strong style={{ fontSize: '0.8rem', color: '#111' }}>Informasi Lokasi & Jalan</strong><br />
                 <div style={{ fontSize: '0.85rem', marginTop: '6px', color: '#2563eb', fontWeight: 'bold' }}>{regionName}</div>
-                <div style={{ fontSize: '0.65rem', color: '#666', marginTop: '6px' }}>Titik Fokus Pantauan</div>
+                <div style={{ fontSize: '0.65rem', color: '#666', marginTop: '6px', marginBottom: '12px' }}>Titik Fokus Pantauan</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button 
+                    style={{ padding: '8px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 6px rgba(59,130,246,0.3)' }}
+                    onClick={() => {
+                      setIsRoutingMode(true);
+                      setRouteStats(null);
+                      const start = myLocation || { lat: alertLocation.lat - 0.01, lng: alertLocation.lng - 0.01 };
+                      setCurrentRouteWaypoints([start, alertLocation]);
+                    }}
+                  >
+                    ➔ Rute: Lokasi Saya ke Sini
+                  </button>
+                  <button 
+                    style={{ padding: '8px 12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 6px rgba(16,185,129,0.3)' }}
+                    onClick={() => {
+                      setIsRoutingMode(true);
+                      setRouteStats(null);
+                      const dest = { lat: alertLocation.lat + 0.01, lng: alertLocation.lng + 0.01 };
+                      setCurrentRouteWaypoints([alertLocation, dest]);
+                    }}
+                  >
+                    ➔ Rute: Dari Sini ke Tempat Lain
+                  </button>
+                </div>
               </div>
             </Popup>
           </Marker>
