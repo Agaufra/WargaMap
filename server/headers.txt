@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Date: Tue, 14 Apr 2026 04:23:22 GMT
+Server: Apache/2.4.41 (Ubuntu)
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Last-Modified: Tue, 14 Apr 2026 04:23:12 GMT
+ETag: "16c-64f63f51b35bf"
+Accept-Ranges: bytes
+Content-Length: 364
+Access-Control-Allow-Origin: https://pelindung.bandung.go.id
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization
+Content-Type: application/x-mpegURL
+

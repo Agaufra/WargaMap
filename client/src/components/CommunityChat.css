@@ -1,0 +1,128 @@
+.live-chat-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: rgba(10, 10, 12, 0.4);
+}
+
+.live-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #1a1a24;
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.live-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem 0.8rem;
+  gap: 0.2rem;
+}
+
+.live-chat-message-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  word-wrap: break-word;
+  transition: background-color 0.1s;
+}
+
+.live-chat-message-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.live-chat-author-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.live-chat-author-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.live-chat-content {
+  color: #f1f1f5;
+  word-break: break-word;
+}
+
+.live-chat-input-area {
+  padding: 0.6rem 0.8rem;
+  background: rgba(15, 15, 20, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.live-chat-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  color: white;
+  font-size: 0.7rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.live-chat-input:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.live-chat-send-btn {
+  background: transparent;
+  color: var(--acc-primary);
+  border: none;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.live-chat-send-btn:hover:not(:disabled) {
+  color: var(--acc-hover);
+}
+
+.live-chat-send-btn:disabled {
+  color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
+}
+
+.live-chat-login-prompt {
+  width: 100%;
+  background: transparent;
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.live-chat-login-prompt:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.5);
+}
