@@ -509,6 +509,34 @@ const MapDashboard = ({
             {showCriticalList ? <ChevronUp size={14} color="gray" /> : <ChevronDown size={14} color="gray" />}
           </div>
 
+          {alertLocation && (
+            <div style={{ padding: '0.6rem', background: 'rgba(59, 130, 246, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '0.6rem', color: '#93c5fd', fontWeight: 'bold' }}>OPSI NAVIGASI PINTAR:</div>
+              <button 
+                style={{ padding: '0.5rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                onClick={() => {
+                  setIsRoutingMode(true);
+                  setRouteStats(null);
+                  const start = myLocation || { lat: alertLocation.lat - 0.01, lng: alertLocation.lng - 0.01 };
+                  setCurrentRouteWaypoints([start, alertLocation]);
+                }}
+              >
+                <Navigation size={12} /> Rute: Lokasi Saya ke Sini
+              </button>
+              <button 
+                style={{ padding: '0.5rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                onClick={() => {
+                  setIsRoutingMode(true);
+                  setRouteStats(null);
+                  const dest = { lat: alertLocation.lat + 0.01, lng: alertLocation.lng + 0.01 };
+                  setCurrentRouteWaypoints([alertLocation, dest]);
+                }}
+              >
+                <Route size={12} /> Rute: Dari Sini ke Titik Lain
+              </button>
+            </div>
+          )}
+
           {showCriticalList && (
             <div className="intel-scroll-container" style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
               <div style={{ fontSize: '0.55rem', color: '#666', marginBottom: '0.1rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -541,22 +569,28 @@ const MapDashboard = ({
         {/* Only show standard report option here if using dropdown model, but single report button is better now */}
 
         {!isRoutingMode ? (
-          <div style={{ display: 'flex', gap: '0.8rem' }}>
-            <button className="btn-secondary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid #6366f1', color: '#818cf8', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem' }} onClick={() => {
+          <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+            <button className="btn-secondary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6', color: '#93c5fd', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => {
               setIsRoutingMode(true);
-              setRouteStats(null); // Reset stats when entering mode
-              const startPos = center || [-6.5971, 106.7997];
-              const lat = Array.isArray(startPos) ? startPos[0] : startPos.lat;
-              const lng = Array.isArray(startPos) ? startPos[1] : startPos.lng;
-              setCurrentRouteWaypoints([
-                { lat: lat, lng: lng },
-                { lat: lat + 0.005, lng: lng + 0.005 } // Default destination to show markers immediately
-              ]);
+              setRouteStats(null);
+              const target = alertLocation || (center ? { lat: center[0] || center.lat, lng: center[1] || center.lng } : { lat: -6.5971, lng: 106.7997 });
+              const start = myLocation || { lat: target.lat - 0.01, lng: target.lng - 0.01 };
+              setCurrentRouteWaypoints([start, target]);
             }}>
-              <Navigation size={14} /> Cari Rute Alternatif
+              <Navigation size={14} /> ➔ Rute: Lokasi Saya ke Sini
             </button>
 
-            <button className="btn-primary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem' }} onClick={() => setIsModalOpen(true)}>
+            <button className="btn-secondary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10b981', color: '#6ee7b7', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => {
+              setIsRoutingMode(true);
+              setRouteStats(null);
+              const target = alertLocation || (center ? { lat: center[0] || center.lat, lng: center[1] || center.lng } : { lat: -6.5971, lng: 106.7997 });
+              const dest = { lat: target.lat + 0.01, lng: target.lng + 0.01 };
+              setCurrentRouteWaypoints([target, dest]);
+            }}>
+              <Route size={14} /> ➔ Rute: Dari Sini ke Titik Lain
+            </button>
+
+            <button className="btn-primary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setIsModalOpen(true)}>
               <Plus size={14} /> Report Issue
             </button>
           </div>
