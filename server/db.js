@@ -25,28 +25,31 @@ async function initDb() {
     // Wrapper to make PG behave like SQLite for easier migration in existing code
     db = {
       run: async (sql, params = []) => {
+        const queryParams = Array.isArray(params) ? params : [params];
         let i = 1;
         let pgSql = sql.replace(/\?/g, () => `$${i++}`);
         
         // If it's an INSERT, we append RETURNING id to get the lastID
         if (pgSql.trim().toUpperCase().startsWith('INSERT')) {
           pgSql += ' RETURNING id';
-          const res = await pool.query(pgSql, params);
+          const res = await pool.query(pgSql, queryParams);
           return { lastID: res.rows[0]?.id };
         }
         
-        return pool.query(pgSql, params);
+        return pool.query(pgSql, queryParams);
       },
       get: async (sql, params = []) => {
+        const queryParams = Array.isArray(params) ? params : [params];
         let i = 1;
         const pgSql = sql.replace(/\?/g, () => `$${i++}`);
-        const res = await pool.query(pgSql, params);
+        const res = await pool.query(pgSql, queryParams);
         return res.rows[0];
       },
       all: async (sql, params = []) => {
+        const queryParams = Array.isArray(params) ? params : [params];
         let i = 1;
         const pgSql = sql.replace(/\?/g, () => `$${i++}`);
-        const res = await pool.query(pgSql, params);
+        const res = await pool.query(pgSql, queryParams);
         return res.rows;
       },
       exec: async (sql) => {
