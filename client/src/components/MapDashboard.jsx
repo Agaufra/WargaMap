@@ -129,12 +129,12 @@ const MapDashboard = ({
   const fetchData = async (loc = alertLocation, autoExpand = false) => {
     try {
       const mainRes = await axios.get(`${API_URL}/api/reports`);
-      const rawReports = Array.isArray(mainRes.data) ? mainRes.data : (mainRes.data.Reports || mainRes.data.reports || []);
-      const allReports = rawReports.map(r => ({
+      const rawReports = Array.isArray(mainRes.data) ? mainRes.data : (mainRes.data?.Reports || mainRes.data?.reports || []);
+      const allReports = Array.isArray(rawReports) ? rawReports.map(r => ({
             ...r,
-            lat: parseFloat(r.lat || r.Lat || r.latitude || 0),
-            lng: parseFloat(r.lng || r.Lng || r.longitude || 0)
-          }));
+            lat: parseFloat(r?.lat || r?.Lat || r?.latitude || 0),
+            lng: parseFloat(r?.lng || r?.Lng || r?.longitude || 0)
+          })) : [];
 
       // Filter reports within 5 km radius of loc. If no loc (app just opened), show 0 markers.
       let filteredReports = [];
@@ -157,22 +157,22 @@ const MapDashboard = ({
       const queryParams = loc ? `?lat=${loc.lat}&lng=${loc.lng}` : '';
       const criticalRes = await axios.get(`${API_URL}/api/reports/top-critical${queryParams}`);
 
-      const rawCritical = Array.isArray(criticalRes.data) ? criticalRes.data : (criticalRes.data.Reports || criticalRes.data.reports || []);
-      const fetchedReports = rawCritical.map(r => ({
+      const rawCritical = Array.isArray(criticalRes.data) ? criticalRes.data : (criticalRes.data?.Reports || criticalRes.data?.reports || []);
+      const fetchedReports = Array.isArray(rawCritical) ? rawCritical.map(r => ({
             ...r,
-            lat: parseFloat(r.lat || r.Lat || r.latitude || 0),
-            lng: parseFloat(r.lng || r.Lng || r.longitude || 0)
-          }));
+            lat: parseFloat(r?.lat || r?.Lat || r?.latitude || 0),
+            lng: parseFloat(r?.lng || r?.Lng || r?.longitude || 0)
+          })) : [];
       setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
       const cctvRes = await axios.get(`${API_URL}/api/cctvs`);
-      const rawCCTVs = Array.isArray(cctvRes.data) ? cctvRes.data : (cctvRes.data.CCTVs || cctvRes.data.cctvs || []);
-      const cameras = rawCCTVs.map(c => ({
+      const rawCCTVs = Array.isArray(cctvRes.data) ? cctvRes.data : (cctvRes.data?.CCTVs || cctvRes.data?.cctvs || []);
+      const cameras = Array.isArray(rawCCTVs) ? rawCCTVs.map(c => ({
             ...c,
-            lat: parseFloat(c.lat || c.Lat || c.latitude || 0),
-            lng: parseFloat(c.lng || c.Lng || c.longitude || 0)
+            lat: parseFloat(c?.lat || c?.Lat || c?.latitude || 0),
+            lng: parseFloat(c?.lng || c?.Lng || c?.longitude || 0)
           })).filter(c => {
             if (!c.lat || !c.lng || !loc) return false;
             const R = 6371;
