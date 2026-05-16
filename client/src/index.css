@@ -1659,76 +1659,105 @@ h6 {
 
   /* 1. App Layout adjustments */
   .app-main-layout {
-    overflow: auto;
-    /* Allow full scroll on mobile if needed */
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 60px); /* Adjust for navbar height */
   }
 
   .main-map-section {
-    flex: 0 0 50vh;
-    /* Fixed height for map on mobile so it doesn't get crushed */
-    min-height: 400px;
+    flex: 0 0 45vh;
+    min-height: 350px;
   }
 
   .bottom-monitor-section {
     flex: 1 1 auto;
     flex-direction: column;
     min-height: auto;
-    overflow: visible;
-    /* Let children dictate height */
   }
 
-  .ai-hub-section {
-    flex: 1 1 auto;
+  /* 2. Navigation & Header adjustments */
+  .navbar {
+    height: auto !important;
+    padding: 0.6rem 1rem !important;
+    flex-direction: column !important;
+    gap: 0.8rem !important;
+    align-items: flex-start !important;
+  }
+
+  .nav-left {
     width: 100%;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    height: 350px;
-    /* Fixed height on mobile for chat section */
+    justify-content: space-between;
   }
 
-  .ai-hub-launcher {
-    bottom: 1rem;
-    left: 1rem;
-    width: 48px;
-    height: 48px;
+  .nav-right {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
-  /* 2. Monitor Container adjustments */
+  .nav-search-form {
+    width: 100% !important;
+    margin: 0 !important;
+    order: 3; /* Push search to third row if needed */
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .user-info-v2 {
+    display: none; /* Hide name on very small screens to save space */
+  }
+
+  /* 3. Situation Bar adjustments */
+  .situation-bar {
+    height: auto !important;
+    padding: 0.5rem 1rem !important;
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+    align-items: center !important;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .situation-left, .situation-center, .situation-right {
+    width: 100%;
+    justify-content: center !important;
+  }
+
+  .situation-label {
+    font-size: 0.65rem !important;
+    letter-spacing: 0.1em;
+  }
+
+  .live-clock span:first-child {
+    font-size: 0.35rem !important;
+  }
+
+  .live-clock span:last-child {
+    font-size: 0.6rem !important;
+  }
+
+  /* 4. Monitor Container adjustments */
   .news-monitor-container {
     flex-direction: column;
-    /* Stack weather, news, chat */
   }
 
   .news-video-section,
   .weather-section,
   .intel-feed-section {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    width: 100%;
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 250px;
+    min-height: 200px;
   }
 
-  /* 3. Navigation adjustments */
-  .navbar {
-    padding: 0 1rem;
-  }
-
-  .nav-links {
-    display: none;
-    /* Hide dense nav links on small screens */
-  }
-
-  .user-profile-nav {
-    padding: 0.2rem 0.5rem;
-    gap: 0.4rem;
-  }
-
-  /* 4. Map overlay adjustments */
-  .situation-bar {
-    padding: 0.6rem 1rem;
-    height: auto;
-    flex-wrap: wrap;
-    /* Allow wrapping */
+  .ai-hub-launcher {
+    bottom: 1.5rem;
+    left: 1.5rem;
+    width: 50px;
+    height: 50px;
   }
 
   .map-navigation-toolbar {
