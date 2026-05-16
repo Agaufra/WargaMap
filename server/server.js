@@ -101,7 +101,7 @@ async function start() {
 
       const { identity, password } = decrypted; // identity can be KTP or Username
       const user = await db.get(
-        'SELECT * FROM users WHERE (ktpNumber = ? OR username = ?) AND password = ?',
+        'SELECT id, name, username, ktpNumber AS "ktpNumber", password, trustScore AS "trustScore" FROM users WHERE (ktpNumber = ? OR username = ?) AND password = ?',
         [identity, identity, password]
       );
       if (user) {
@@ -121,7 +121,16 @@ async function start() {
     try {
       // Join with users to see trustScore of reporter
       const reports = await db.all(`
-        SELECT r.*, u.name as reporterName, u.trustScore as reporterTrust 
+        SELECT 
+          r.id, r.title, r.description, r.category, r.lat, r.lng, r.image, r.status, r.source, r.url,
+          r.priorityScore AS "priorityScore", 
+          r.priorityLevel AS "priorityLevel", 
+          r.userId AS "userId", 
+          r.upvotes, r.downvotes, 
+          r.routeData AS "routeData", 
+          r.createdAt AS "createdAt",
+          u.name AS "reporterName", 
+          u.trustScore AS "reporterTrust"
         FROM reports r
         LEFT JOIN users u ON r.userId = u.id
         ORDER BY r.createdAt DESC
@@ -142,7 +151,7 @@ async function start() {
       if (!userId) return res.status(401).json({ error: 'Please login to report.' });
 
       // Check Anti-Spam (Max 3/day)
-      const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
+      const user = await db.get('SELECT id, lastReportDate AS "lastReportDate", reportCountToday AS "reportCountToday" FROM users WHERE id = ?', [userId]);
       if (user.lastReportDate === today && user.reportCountToday >= 3) {
         return res.status(429).json({ error: 'Daily limit reached (Max 3 reports/day).' });
       }
@@ -160,7 +169,7 @@ async function start() {
       const newCount = (user.lastReportDate === today) ? user.reportCountToday + 1 : 1;
       await db.run('UPDATE users SET reportCountToday = ?, lastReportDate = ? WHERE id = ?', [newCount, today, userId]);
 
-      const newReport = await db.get('SELECT * FROM reports WHERE id = ?', result.lastID);
+      const newReport = await db.get('SELECT id, title, description, category, lat, lng, image, status, priorityScore AS "priorityScore", priorityLevel AS "priorityLevel", source, url, userId AS "userId", upvotes, downvotes, routeData AS "routeData", createdAt AS "createdAt" FROM reports WHERE id = ?', result.lastID);
       res.status(201).json(newReport);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -226,7 +235,7 @@ async function start() {
       }
 
       // Fetch non-resolved reports
-      let reports = await db.all('SELECT * FROM reports WHERE status != "Resolved" ORDER BY priorityScore DESC');
+      let reports = await db.all('SELECT id, title, description, category, lat, lng, image, status, priorityScore AS "priorityScore", priorityLevel AS "priorityLevel", source, url, userId AS "userId", upvotes, downvotes, routeData AS "routeData", createdAt AS "createdAt" FROM reports WHERE status != "Resolved" ORDER BY "priorityScore" DESC');
 
       // STRICT ENFORCEMENT: If no valid coordinates, return empty list (prevent nationwide leakage)
       if (isNaN(targetLat) || isNaN(targetLng)) {
@@ -283,7 +292,7 @@ async function start() {
 
   app.get('/api/cctvs', async (req, res) => {
     try {
-      const cameras = await db.all('SELECT * FROM cctvs');
+      const cameras = await db.all('SELECT id, name, lat, lng, streamUrl AS "streamUrl", status FROM cctvs');
       res.json(cameras);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -294,7 +303,14 @@ async function start() {
   app.get('/api/chats', async (req, res) => {
     try {
       const chats = await db.all(`
-        SELECT c.*, u.name as userName, u.username as userHandle, u.trustScore 
+        SELECT 
+          c.id, 
+          c.userId AS "userId", 
+          c.message, 
+          c.createdAt AS "createdAt",
+          u.name AS "userName", 
+          u.username AS "userHandle", 
+          u.trustScore AS "trustScore"
         FROM chats c
         LEFT JOIN users u ON c.userId = u.id
         ORDER BY c.createdAt ASC
