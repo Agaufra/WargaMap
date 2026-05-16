@@ -54,23 +54,6 @@ const SituationBar = ({ viewMode, setViewMode, mapStyle, setMapStyle }) => {
       </div>
 
       <div className="situation-right" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <div className="view-toggle-group">
-          <button
-            className={`view-btn ${mapStyle === 'dark' ? 'active' : ''}`}
-            onClick={() => setMapStyle('dark')}
-            style={{ fontSize: '0.65rem', padding: '4px 10px' }}
-          >
-            Vector
-          </button>
-          <button
-            className={`view-btn ${mapStyle === 'satellite' ? 'active' : ''}`}
-            onClick={() => setMapStyle('satellite')}
-            style={{ fontSize: '0.65rem', padding: '4px 10px' }}
-          >
-            Satellite
-          </button>
-        </div>
-
         <button
           onClick={toggleFullScreen}
           style={{
