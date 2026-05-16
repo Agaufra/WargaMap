@@ -153,7 +153,7 @@ function App() {
     return strength; // 0-3
   };
 
-  const isNikValid = loginData.ktpNumber ? loginData.ktpNumber.length === 16 : false;
+  const isNikValid = loginData.ktpNumber ? (loginData.ktpNumber.length >= 8 && loginData.ktpNumber.length <= 16) : false;
   const passwordsMatch = loginData.password === loginData.confirmPassword;
   const passwordStrength = getPasswordStrength(loginData.password);
 
@@ -188,7 +188,7 @@ function App() {
       const encryptedPayload = encryptAES(payload);
 
       if (isRegistering) {
-        if (!isNikValid) throw new Error('NIK must be 16 digits');
+        if (!isNikValid) throw new Error('NIK (Nomor Induk) harus 8-16 digit');
         if (!passwordsMatch) throw new Error('Passwords do not match');
         if (passwordStrength < 2) throw new Error('Password is too weak');
 
