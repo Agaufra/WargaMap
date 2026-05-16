@@ -168,7 +168,7 @@ const ReportModal = ({ onClose, onSuccess, currentCenter, userId, routeData }) =
               <label className="btn-primary" style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', flex: 1, padding: '0.8rem' }}>
                 <Camera size={18} />
                 <span>Ambil / Upload Foto</span>
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} required />
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
               </label>
               {formData.image && (
                 <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6' }}>
