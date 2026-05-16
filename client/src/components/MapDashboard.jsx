@@ -129,7 +129,13 @@ const MapDashboard = ({
   const fetchData = async (loc = alertLocation, autoExpand = false) => {
     try {
       const mainRes = await axios.get(`${API_URL}/api/reports`);
-      const allReports = Array.isArray(mainRes.data) ? mainRes.data : [];
+      const allReports = Array.isArray(mainRes.data) 
+        ? mainRes.data.map(r => ({
+            ...r,
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lng)
+          }))
+        : [];
 
       // Filter reports within 5 km radius of loc. If no loc (app just opened), show 0 markers.
       let filteredReports = [];
@@ -152,13 +158,26 @@ const MapDashboard = ({
       const queryParams = loc ? `?lat=${loc.lat}&lng=${loc.lng}` : '';
       const criticalRes = await axios.get(`${API_URL}/api/reports/top-critical${queryParams}`);
 
-      const fetchedReports = Array.isArray(criticalRes.data) ? criticalRes.data : [];
+      const fetchedReports = Array.isArray(criticalRes.data) 
+        ? criticalRes.data.map(r => ({
+            ...r,
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lng)
+          }))
+        : [];
       setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
       const cctvRes = await axios.get(`${API_URL}/api/cctvs`);
-      setCCTVs(Array.isArray(cctvRes.data) ? cctvRes.data : []);
+      const cameras = Array.isArray(cctvRes.data) 
+        ? cctvRes.data.map(c => ({
+            ...c,
+            lat: parseFloat(c.lat),
+            lng: parseFloat(c.lng)
+          }))
+        : [];
+      setCCTVs(cameras);
 
       // Auto-expand only if problems are actually found in this area
       if (autoExpand && fetchedReports.length > 0) {
