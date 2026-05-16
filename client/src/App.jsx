@@ -243,15 +243,15 @@ function App() {
         />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <SituationBar
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            mapStyle={mapStyle}
+            setMapStyle={setMapStyle}
+          />
           <Routes>
             <Route path="/" element={
               <main className="app-main-layout">
-                <SituationBar
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  mapStyle={mapStyle}
-                  setMapStyle={setMapStyle}
-                />
                 <div className="main-map-section" style={{ position: 'relative' }}>
                   <div style={{ display: 'contents' }}>
                     <MapDashboard

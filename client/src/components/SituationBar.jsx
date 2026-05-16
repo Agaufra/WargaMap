@@ -43,38 +43,10 @@ const SituationBar = ({ viewMode, setViewMode, mapStyle, setMapStyle }) => {
   };
 
   return (
-    <div className="situation-bar">
-      <div className="situation-left">
-        <span className="situation-label">INDONESIA STATION</span>
-      </div>
-
-      <div className="situation-center">
-        <Clock size={14} color="#6366f1" style={{ opacity: 0.8 }} />
-        <div className="live-clock">{formatTime(time)}</div>
-      </div>
-
-      <div className="situation-right" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <button
-          onClick={toggleFullScreen}
-          style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '6px',
-            borderRadius: '6px',
-            color: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s'
-          }}
-          title="Toggle Fullscreen"
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
-        >
-          <Maximize size={16} />
-        </button>
-      </div>
+    <div className="situation-bar" style={{ background: '#0b0b0f', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.2rem 1rem', height: '34px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ color: 'white', fontSize: '0.7rem', fontWeight: 'bold' }}>INDONESIA STATION</div>
+      <div style={{ color: 'white', fontSize: '0.7rem' }}>JAM LIVE: {time.toLocaleTimeString()}</div>
+      <button onClick={toggleFullScreen} style={{ background: 'transparent', border: '1px solid white', color: 'white', cursor: 'pointer', fontSize: '0.6rem', padding: '2px 5px' }}>FULLSCREEN</button>
     </div>
   );
 };
