@@ -253,7 +253,7 @@ function App() {
                   setMapStyle={setMapStyle}
                 />
                 <div className="main-map-section" style={{ position: 'relative' }}>
-                  <div style={{ display: viewMode === '2D' ? 'contents' : 'none' }}>
+                  <div style={{ display: 'contents' }}>
                     <MapDashboard
                       showCCTV={showCCTV}
                       center={mapFocus.center}
@@ -269,16 +269,6 @@ function App() {
                       setAlertLocation={setAlertLocation}
                       user={user}
                       onLoginClick={() => setShowLogin(true)}
-                    />
-                  </div>
-                  <div style={{ display: viewMode === '3D' ? 'contents' : 'none' }}>
-                    <GlobeView
-                      showCCTV={showCCTV}
-                      isVisible={viewMode === '3D'}
-                      onFlyTo={(c, z) => {
-                        setViewMode('2D');
-                        setMapFocus({ center: c, zoom: z });
-                      }}
                     />
                   </div>
                   {isAIChatOpen && (

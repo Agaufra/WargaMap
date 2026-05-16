@@ -61,16 +61,16 @@ const SituationBar = ({ viewMode, setViewMode, mapStyle, setMapStyle }) => {
       <div className="situation-right" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
         <div className="view-toggle-group">
           <button
-            className={`view-btn ${viewMode === '2D' ? 'active' : ''}`}
-            onClick={() => setViewMode('2D')}
+            className={`view-btn ${mapStyle === 'dark' ? 'active' : ''}`}
+            onClick={() => setMapStyle('dark')}
           >
-            2D
+            Vector
           </button>
           <button
-            className={`view-btn ${viewMode === '3D' ? 'active' : ''}`}
-            onClick={() => setViewMode('3D')}
+            className={`view-btn ${mapStyle === 'satellite' ? 'active' : ''}`}
+            onClick={() => setMapStyle('satellite')}
           >
-            3D
+            Satellite
           </button>
         </div>
 
