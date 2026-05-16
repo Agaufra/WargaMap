@@ -20,9 +20,9 @@ const GlobeView = ({ showCCTV, isVisible }) => {
           axios.get(`${API_URL}/api/smart-city-data`)
         ]);
 
-        setReports(reportsRes.data);
-        setCCTVs(cctvRes.data);
-        setInfrastructure(smartCityRes.data.infrastructure);
+        setReports(Array.isArray(reportsRes.data) ? reportsRes.data : []);
+        setCCTVs(Array.isArray(cctvRes.data) ? cctvRes.data : []);
+        setInfrastructure(smartCityRes.data?.infrastructure || []);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data for Globe', err);
