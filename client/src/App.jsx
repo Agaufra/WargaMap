@@ -124,7 +124,15 @@ function App() {
   const [isBottomBarOpen, setIsBottomBarOpen] = React.useState(false);
 
   // Auth State (Lifted)
-  const [user, setUser] = React.useState(JSON.parse(localStorage.getItem('civicsense_user')) || null);
+  const [user, setUser] = React.useState(() => {
+    try {
+      const item = localStorage.getItem('civicsense_user');
+      return item && item !== 'undefined' ? JSON.parse(item) : null;
+    } catch (e) {
+      localStorage.removeItem('civicsense_user');
+      return null;
+    }
+  });
   const [showLogin, setShowLogin] = React.useState(false);
   const [isRegistering, setIsRegistering] = React.useState(false);
   const [loginData, setLoginData] = React.useState({
