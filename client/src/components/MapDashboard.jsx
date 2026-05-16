@@ -77,7 +77,7 @@ const MapDashboard = ({
   const [currentRouteWaypoints, setCurrentRouteWaypoints] = useState([]);
   const [activeRoute, setActiveRoute] = useState(null);
   const [showTraffic, setShowTraffic] = useState(false);
-  
+
   // Routing Panel States
   const [routeStats, setRouteStats] = useState(null);
   const [travelMode, setTravelMode] = useState('car');
@@ -109,7 +109,7 @@ const MapDashboard = ({
       const road = address.road || address.pedestrian || '';
       const suburb = address.suburb || address.neighbourhood || address.village || '';
       const city = address.city || address.town || address.state_district || address.county || '';
-      
+
       let cityLower = city.toLowerCase();
       let translatedCity = city;
       if (cityLower.includes('south jakarta')) translatedCity = 'Jakarta Selatan';
@@ -117,7 +117,7 @@ const MapDashboard = ({
       else if (cityLower.includes('west jakarta')) translatedCity = 'Jakarta Barat';
       else if (cityLower.includes('east jakarta')) translatedCity = 'Jakarta Timur';
       else if (cityLower.includes('central jakarta')) translatedCity = 'Jakarta Pusat';
-      
+
       const fullPlace = [road, suburb, translatedCity].filter(Boolean).join(', ');
       setRegionName(fullPlace || 'Lokasi Tidak Diketahui');
     } catch (err) {
@@ -131,14 +131,29 @@ const MapDashboard = ({
       const mainRes = await axios.get(`${API_URL}/api/reports`);
       const allReports = Array.isArray(mainRes.data) ? mainRes.data : [];
 
-      // Display all nationwide reports on the map (clustering will handle UI performance)
-      setReports(allReports);
+      // Filter reports within 5 km radius of loc. If no loc (app just opened), show 0 markers.
+      let filteredReports = [];
+      if (loc && loc.lat && loc.lng) {
+        filteredReports = allReports.filter(r => {
+          if (!r.lat || !r.lng) return false;
+          const R = 6371; // km
+          const dLat = (r.lat - loc.lat) * Math.PI / 180;
+          const dLon = (r.lng - loc.lng) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(loc.lat * Math.PI / 180) * Math.cos(r.lat * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const distance = R * c;
+          return distance <= 5;
+        });
+      }
 
       // Fetch localized top-critical alerts
       const queryParams = loc ? `?lat=${loc.lat}&lng=${loc.lng}` : '';
       const criticalRes = await axios.get(`${API_URL}/api/reports/top-critical${queryParams}`);
 
       const fetchedReports = Array.isArray(criticalRes.data) ? criticalRes.data : [];
+      setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
@@ -278,10 +293,10 @@ const MapDashboard = ({
   return (
     <div className="map-container-wrapper" style={{ willChange: 'transform' }}>
 
-      <MapContainer 
-        center={center} 
-        zoom={zoom} 
-        className="map-root" 
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        className="map-root"
         zoomControl={false}
         preferCanvas={true}
         markerZoomAnimation={true}
@@ -546,7 +561,7 @@ const MapDashboard = ({
       )}
       {/* Routing UI Panel */}
       {isRoutingMode && (
-        <RoutingPanel 
+        <RoutingPanel
           onClose={() => {
             setIsRoutingMode(false);
             setRouteStats(null);
@@ -682,16 +697,16 @@ const MapNavigation = ({ setMapStyle, mapStyle, onViewChange, detectLocation, sh
 
 const MapRecenter = ({ center, zoom }) => {
   const map = useMap();
-  
+
   useEffect(() => {
     if (center) {
       const currentCenter = map.getCenter();
       const targetLat = center[0] || center.lat;
       const targetLng = center[1] || center.lng;
-      
+
       // Hitung perbedaan koordinat
       const diff = Math.sqrt(
-        Math.pow(currentCenter.lat - targetLat, 2) + 
+        Math.pow(currentCenter.lat - targetLat, 2) +
         Math.pow(currentCenter.lng - targetLng, 2)
       );
 
@@ -759,14 +774,14 @@ const BaseLayers = ({ mapStyle }) => {
 
 const TrafficLayer = () => {
   const tomtomKey = import.meta.env.VITE_TOMTOM_API_KEY;
-  
+
   if (!tomtomKey) {
     console.error("TomTom API Key not found in .env");
     return null;
   }
 
   const trafficUrl = `https://api.tomtom.com/traffic/map/4/tile/flow/relative/{z}/{x}/{y}.png?key=${tomtomKey}`;
-  
+
   return (
     <TileLayer
       url={trafficUrl}

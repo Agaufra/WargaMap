@@ -33,7 +33,7 @@ const https = require('https');
 async function start() {
   db = await initDb();
   await fetchNewsAndIngest(db);
-  
+
   // Auto-refresh news every hour to keep the Intel Feed fresh
   setInterval(async () => {
     try {
@@ -235,7 +235,7 @@ async function start() {
       }
 
       // Fetch non-resolved reports
-      let reports = await db.all('SELECT id, title, description, category, lat, lng, image, status, priorityScore AS "priorityScore", priorityLevel AS "priorityLevel", source, url, userId AS "userId", upvotes, downvotes, routeData AS "routeData", createdAt AS "createdAt" FROM reports WHERE status != \'Resolved\' ORDER BY priorityScore DESC');
+      let reports = await db.all('SELECT id, title, description, category, lat, lng, image, status, priorityScore AS "priorityScore", priorityLevel AS "priorityLevel", source, url, userId AS "userId", upvotes, downvotes, routeData AS "routeData", createdAt AS "createdAt" FROM reports WHERE status != "Resolved" ORDER BY "priorityScore" DESC');
 
       // STRICT ENFORCEMENT: If no valid coordinates, return empty list (prevent nationwide leakage)
       if (isNaN(targetLat) || isNaN(targetLng)) {
@@ -278,7 +278,7 @@ async function start() {
 
     ];
     for (const cam of cameras) {
-      const existing = await db.get('SELECT id, streamUrl AS "streamUrl" FROM cctvs WHERE name = ?', [cam.name]);
+      const existing = await db.get('SELECT id, streamUrl FROM cctvs WHERE name = ?', [cam.name]);
       if (!existing) {
         console.log(`[SYSTEM] Syncing New Camera: ${cam.name}`);
         await db.run('INSERT INTO cctvs (name, lat, lng, streamUrl) VALUES (?, ?, ?, ?)', [cam.name, cam.lat, cam.lng, cam.stream]);
