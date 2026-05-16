@@ -6,7 +6,7 @@ const { initDb } = require('./db');
 const { calculatePriorityScore } = require('./ai-scoring');
 const { fetchNewsAndIngest } = require('./news-service');
 const { generateRecommendation } = require('./gemini-service');
-const { decryptAES, decryptChaCha20 } = require('./crypto');
+const { decryptAES, encryptAES, decryptChaCha20 } = require('./crypto');
 
 const http = require('http');
 const { Server } = require('socket.io');
