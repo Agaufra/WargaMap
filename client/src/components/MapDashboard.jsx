@@ -153,7 +153,7 @@ const MapDashboard = ({
       const criticalRes = await axios.get(`${API_URL}/api/reports/top-critical${queryParams}`);
 
       const fetchedReports = Array.isArray(criticalRes.data) ? criticalRes.data : [];
-      setReports(allReports);
+      setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
@@ -364,11 +364,7 @@ const MapDashboard = ({
         ))}
 
         {/* INCIDENT REPORTS with Clustering */}
-        <MarkerClusterGroup
-          chunkedLoading
-          spiderfyOnMaxZoom={true}
-          showCoverageOnHover={false}
-        >
+        {/* Direct Marker Rendering (No Clustering to avoid production rendering bugs) */}
           {reports.map((report) => (
             report.lat && report.lng && (
               <Marker
@@ -436,7 +432,7 @@ const MapDashboard = ({
               </Marker>
             )
           ))}
-        </MarkerClusterGroup>
+
 
         <MapNavigation
           setMapStyle={setMapStyle}
