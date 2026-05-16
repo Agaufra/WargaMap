@@ -153,7 +153,7 @@ function App() {
     return strength; // 0-3
   };
 
-  const isNikValid = loginData.ktpNumber ? (loginData.ktpNumber.length >= 8 && loginData.ktpNumber.length <= 16) : false;
+  const isNikValid = loginData.ktpNumber ? loginData.ktpNumber.length === 16 : false;
   const passwordsMatch = loginData.password === loginData.confirmPassword;
   const passwordStrength = getPasswordStrength(loginData.password);
 
@@ -188,7 +188,7 @@ function App() {
       const encryptedPayload = encryptAES(payload);
 
       if (isRegistering) {
-        if (!isNikValid) throw new Error('NIK (Nomor Induk) harus 8-16 digit');
+        if (!isNikValid) throw new Error('NIK (Nomor Induk) wajib berjumlah 16 digit');
         if (!passwordsMatch) throw new Error('Passwords do not match');
         if (passwordStrength < 2) throw new Error('Password is too weak');
 
@@ -408,6 +408,12 @@ function App() {
                         onChange={e => setLoginData({ ...loginData, ktpNumber: e.target.value.replace(/\D/g, '') })}
                         required
                       />
+                      {loginData.ktpNumber.length > 0 && loginData.ktpNumber.length < 16 && (
+                        <div style={{ color: '#ef4444', fontSize: '0.65rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <AlertCircle size={10} />
+                          NIK wajib 16 digit (Kurang {16 - loginData.ktpNumber.length} angka lagi)
+                        </div>
+                      )}
                     </div>
 
                     <div className="auth-input-group">
