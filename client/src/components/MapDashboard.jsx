@@ -165,7 +165,7 @@ const MapDashboard = ({
             lng: parseFloat(r.lng || r.Lng || r.longitude || 0)
           }))
         : [];
-      setReports(allReports);
+      setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
@@ -175,7 +175,17 @@ const MapDashboard = ({
             ...c,
             lat: parseFloat(c.lat || c.Lat || c.latitude || 0),
             lng: parseFloat(c.lng || c.Lng || c.longitude || 0)
-          }))
+          })).filter(c => {
+            if (!c.lat || !c.lng || !loc) return false;
+            const R = 6371;
+            const dLat = (c.lat - loc.lat) * Math.PI / 180;
+            const dLon = (c.lng - loc.lng) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(loc.lat * Math.PI / 180) * Math.cos(c.lat * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return d <= 5;
+          })
         : [];
       setCCTVs(cameras);
 
