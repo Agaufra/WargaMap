@@ -28,8 +28,12 @@ const CommunityChat = ({ user, onLoginClick }) => {
   const fetchChats = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/chats`);
+      
+      // Safety check: Ensure the response is an array
+      const chatData = Array.isArray(res.data) ? res.data : [];
+      
       // Decrypt initial messages
-      const decryptedChats = res.data.map(chat => {
+      const decryptedChats = chatData.map(chat => {
         try {
           const encryptedObj = JSON.parse(chat.message);
           return { ...chat, message: decryptChaCha20(encryptedObj) };

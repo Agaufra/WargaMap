@@ -129,11 +129,12 @@ const MapDashboard = ({
   const fetchData = async (loc = alertLocation, autoExpand = false) => {
     try {
       const mainRes = await axios.get(`${API_URL}/api/reports`);
+      const allReports = Array.isArray(mainRes.data) ? mainRes.data : [];
 
       // Filter reports within 5 km radius of loc. If no loc (app just opened), show 0 markers.
       let filteredReports = [];
       if (loc && loc.lat && loc.lng) {
-        filteredReports = mainRes.data.filter(r => {
+        filteredReports = allReports.filter(r => {
           if (!r.lat || !r.lng) return false;
           const R = 6371; // km
           const dLat = (r.lat - loc.lat) * Math.PI / 180;

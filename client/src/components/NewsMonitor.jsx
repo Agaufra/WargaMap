@@ -12,7 +12,8 @@ const NewsMonitor = ({ onLocate, user, onLoginClick }) => {
     const fetchReports = async () => {
       try {
         const res = await axios.get(`${API_URL}/api/reports`);
-        setReports(res.data.slice(0, 50));
+        const data = Array.isArray(res.data) ? res.data : [];
+        setReports(data.slice(0, 50));
       } catch (err) {
         console.error('Error fetching intel feed', err);
       }
