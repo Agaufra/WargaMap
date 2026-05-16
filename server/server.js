@@ -144,7 +144,7 @@ async function start() {
   // 4. Submit a new report (with Anti-Spam & User Check)
   app.post('/api/reports', async (req, res) => {
     try {
-      const { title, description, category, lat, lng, image, userId } = req.body;
+      const { title, description, category, lat, lng, image, userId, routeData } = req.body;
       const createdAt = Date.now();
       const today = new Date().toISOString().split('T')[0];
 
