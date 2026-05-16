@@ -153,7 +153,7 @@ const MapDashboard = ({
       const criticalRes = await axios.get(`${API_URL}/api/reports/top-critical${queryParams}`);
 
       const fetchedReports = Array.isArray(criticalRes.data) ? criticalRes.data : [];
-      setReports(filteredReports);
+      setReports(allReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
