@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../utils/config';
 import { X, Send, MapPin, Camera, ShieldAlert } from 'lucide-react';
 
 const ReportModal = ({ onClose, onSuccess, currentCenter, userId, routeData }) => {
@@ -54,8 +55,7 @@ const ReportModal = ({ onClose, onSuccess, currentCenter, userId, routeData }) =
         }
 
         try {
-          // 2. KIRIM LAPORAN KE SERVER
-          await axios.post('http://localhost:3001/api/reports', {
+          await axios.post(`${API_URL}/api/reports`, {
             ...formData,
             userId: userId,
             title: formData.category === 'alternative_route' 
@@ -98,7 +98,9 @@ const ReportModal = ({ onClose, onSuccess, currentCenter, userId, routeData }) =
           <X size={24} />
         </button>
         
-        <h2 style={{ marginBottom: '0.5rem', color: 'white' }}>Validasi Laporan AI</h2>
+        <h2 style={{ marginBottom: '0.5rem', color: 'white' }}>
+          {formData.category === 'alternative_route' ? 'Publikasikan Rute Alternatif' : 'Validasi Laporan AI'}
+        </h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
           Sistem akan memverifikasi lokasi GPS dan identitas Anda untuk mencegah Hoax.
         </p>
@@ -137,11 +139,13 @@ const ReportModal = ({ onClose, onSuccess, currentCenter, userId, routeData }) =
           )}
           
           <div className="form-group">
-            <label>Deskripsi Singkat</label>
+            <label>{formData.category === 'alternative_route' ? 'Deskripsi Rute' : 'Deskripsi Singkat'}</label>
             <textarea 
               className="form-control" 
               rows="3"
-              placeholder="Ceritakan sedikit detail kejadiannya..."
+              placeholder={formData.category === 'alternative_route' 
+                ? "Jelaskan rute ini (misal: kondisi jalan, alasan disarankan)..." 
+                : "Ceritakan sedikit detail kejadiannya..."}
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               required
@@ -149,7 +153,7 @@ const ReportModal = ({ onClose, onSuccess, currentCenter, userId, routeData }) =
           </div>
           
           <div className="form-group">
-            <label>Lokasi Kejadian (GPS Locked)</label>
+            <label>{formData.category === 'alternative_route' ? 'Lokasi Jalur (Titik Acuan)' : 'Lokasi Kejadian (GPS Locked)'}</label>
             <div className="form-control" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)' }}>
               <MapPin size={16} color="#3b82f6" />
               <span style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: 'bold' }}>

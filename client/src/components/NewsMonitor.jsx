@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../utils/config';
 import { Radio, AlertTriangle, Cloud, Sun, CloudRain, CloudLightning, Wind, Droplets, CloudFog } from 'lucide-react';
 import CommunityChat from './CommunityChat';
 
@@ -10,7 +11,7 @@ const NewsMonitor = ({ onLocate, user, onLoginClick }) => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get('http://localhost:3001/api/reports');
+        const res = await axios.get(`${API_URL}/api/reports`);
         setReports(res.data.slice(0, 50));
       } catch (err) {
         console.error('Error fetching intel feed', err);

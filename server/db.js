@@ -1,19 +1,70 @@
+const { Pool } = require('pg');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
+let db;
+
 async function initDb() {
-  const db = await open({
-    filename: './database.sqlite',
-    driver: sqlite3.Database
-  });
+  // Check if we are in production (Railway) or local
+  const isPostgres = process.env.DATABASE_URL;
 
-  // Set busy timeout to prevent hangs during high concurrency
-  await db.run('PRAGMA busy_timeout = 5000');
+  if (isPostgres) {
+    console.log('[DATABASE] Using PostgreSQL (Production)');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false // Required for Railway/Supabase
+      }
+    });
 
-  // 1. Table Reports (Updated)
-  await db.exec(`
+    // Wrapper to make PG behave like SQLite for easier migration in existing code
+    db = {
+      run: async (sql, params = []) => {
+        // Replace ? with $1, $2, etc. for PostgreSQL compatibility
+        let i = 1;
+        const pgSql = sql.replace(/\?/g, () => `$${i++}`);
+        return pool.query(pgSql, params);
+      },
+      get: async (sql, params = []) => {
+        let i = 1;
+        const pgSql = sql.replace(/\?/g, () => `$${i++}`);
+        const res = await pool.query(pgSql, params);
+        return res.rows[0];
+      },
+      all: async (sql, params = []) => {
+        let i = 1;
+        const pgSql = sql.replace(/\?/g, () => `$${i++}`);
+        const res = await pool.query(pgSql, params);
+        return res.rows;
+      },
+      exec: async (sql) => {
+        return pool.query(sql);
+      }
+    };
+  } else {
+    console.log('[DATABASE] Using SQLite (Local)');
+    db = await open({
+      filename: './database.sqlite',
+      driver: sqlite3.Database
+    });
+  }
+
+  // Define Table Structures (Ensuring compatibility for both)
+  const schema = `
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT,
+      username TEXT UNIQUE,
+      ktpNumber TEXT UNIQUE,
+      password TEXT,
+      trustScore INTEGER DEFAULT 50,
+      reportCountToday INTEGER DEFAULT 0,
+      lastReportDate TEXT,
+      createdAt BIGINT
+    );
+
     CREATE TABLE IF NOT EXISTS reports (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       title TEXT,
       description TEXT,
       category TEXT,
@@ -29,73 +80,43 @@ async function initDb() {
       upvotes INTEGER DEFAULT 0,
       downvotes INTEGER DEFAULT 0,
       routeData TEXT,
-      createdAt INTEGER
-    )
-  `);
+      createdAt BIGINT
+    );
 
-  // Add routeData column if it doesn't exist (for existing databases)
-  try {
-    await db.run('ALTER TABLE reports ADD COLUMN routeData TEXT');
-  } catch (e) {
-    // Column likely already exists
-  }
-
-  // 2. Table Users (Identity & Trust Score)
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      username TEXT UNIQUE,
-      ktpNumber TEXT UNIQUE,
-      password TEXT, -- In real app, must be hashed
-      trustScore INTEGER DEFAULT 50, -- Start with neutral trust
-      reportCountToday INTEGER DEFAULT 0,
-      lastReportDate TEXT,
-      createdAt INTEGER
-    )
-  `);
-
-  // Add username column if it doesn't exist (for existing databases)
-  try {
-    await db.run('ALTER TABLE users ADD COLUMN username TEXT');
-    await db.run('CREATE UNIQUE INDEX idx_users_username ON users(username)');
-  } catch (e) {
-    // Column likely already exists
-  }
-
-  // 3. Table Votes (Citizen Verification Tracking)
-  await db.exec(`
     CREATE TABLE IF NOT EXISTS votes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       reportId INTEGER,
       userId INTEGER,
-      voteType TEXT, -- 'upvote' or 'downvote'
-      createdAt INTEGER,
+      voteType TEXT,
+      createdAt BIGINT,
       UNIQUE(reportId, userId)
-    )
-  `);
+    );
 
-  // 4. Table CCTVs (Live Monitor Integration)
-  await db.exec(`
     CREATE TABLE IF NOT EXISTS cctvs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT,
       lat REAL,
       lng REAL,
       streamUrl TEXT,
       status TEXT DEFAULT 'Online'
-    )
-  `);
+    );
 
-  // 5. Table Chats (Community Intel Feed)
-  await db.exec(`
     CREATE TABLE IF NOT EXISTS chats (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       userId INTEGER,
       message TEXT,
-      createdAt INTEGER
-    )
-  `);
+      createdAt BIGINT
+    );
+  `;
+
+  // SQLite doesn't support SERIAL PRIMARY KEY, so we adjust if needed
+  if (!isPostgres) {
+    const sqliteSchema = schema.replace(/SERIAL PRIMARY KEY/g, 'INTEGER PRIMARY KEY AUTOINCREMENT')
+                               .replace(/BIGINT/g, 'INTEGER');
+    await db.exec(sqliteSchema);
+  } else {
+    await db.exec(schema);
+  }
 
   return db;
 }

@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Send, LogIn, MessageSquare, ShieldAlert, CheckCircle, Shield } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { encryptChaCha20, decryptChaCha20 } from '../utils/crypto';
 import './CommunityChat.css';
+import { API_URL } from '../utils/config';
 
-const socket = io('http://localhost:3001');
+const socket = io(API_URL);
 
 // Helper to assign consistent colors to usernames
 const getStringColor = (str) => {
@@ -25,8 +27,17 @@ const CommunityChat = ({ user, onLoginClick }) => {
 
   const fetchChats = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/chats');
-      setMessages(res.data);
+      const res = await axios.get(`${API_URL}/api/chats`);
+      // Decrypt initial messages
+      const decryptedChats = res.data.map(chat => {
+        try {
+          const encryptedObj = JSON.parse(chat.message);
+          return { ...chat, message: decryptChaCha20(encryptedObj) };
+        } catch (e) {
+          return chat; // Fallback for old unencrypted messages
+        }
+      });
+      setMessages(decryptedChats);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching chats:', err);
@@ -39,10 +50,18 @@ const CommunityChat = ({ user, onLoginClick }) => {
 
     // Listen for real-time messages
     socket.on('newMessage', (newMsg) => {
+      // Decrypt the incoming message
+      let decryptedMsg = newMsg;
+      try {
+        const encryptedObj = JSON.parse(newMsg.message);
+        decryptedMsg = { ...newMsg, message: decryptChaCha20(encryptedObj) };
+      } catch (e) {
+        console.warn('Received unencrypted message');
+      }
+
       setMessages((prev) => {
-        // Prevent duplicate appending
         if (prev.find((m) => m.id === newMsg.id)) return prev;
-        return [...prev, newMsg];
+        return [...prev, decryptedMsg];
       });
     });
 
@@ -66,10 +85,13 @@ const CommunityChat = ({ user, onLoginClick }) => {
     const msg = inputMessage;
     setInputMessage('');
 
+    // Encrypt message using ChaCha20
+    const encryptedMsg = encryptChaCha20(msg);
+
     // Send through WebSocket to broadcast instantly
     socket.emit('chatMessage', {
       userId: user.id,
-      message: msg
+      message: encryptedMsg
     });
   };
 
@@ -84,9 +106,11 @@ const CommunityChat = ({ user, onLoginClick }) => {
       {/* Header */}
       <div className="live-chat-header">
         <MessageSquare size={16} color="#6366f1" />
-        <h2 style={{ fontSize: '0.75rem', letterSpacing: '0.1em', fontWeight: 'bold', margin: 0, textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)' }}>
-          Warga Talk
-        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '0.75rem', letterSpacing: '0.1em', fontWeight: 'bold', margin: 0, textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)' }}>
+            Warga Talk
+          </h2>
+        </div>
         <div style={{ marginLeft: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 6px', borderRadius: '4px', fontSize: '0.6rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>
           <div style={{ width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
           LIVE

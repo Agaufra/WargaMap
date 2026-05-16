@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Globe from 'react-globe.gl';
 import axios from 'axios';
+import { API_URL } from '../utils/config';
 import * as THREE from 'three';
 
 const GlobeView = ({ showCCTV, isVisible }) => {
@@ -14,9 +15,9 @@ const GlobeView = ({ showCCTV, isVisible }) => {
     const fetchData = async () => {
       try {
         const [reportsRes, cctvRes, smartCityRes] = await Promise.all([
-          axios.get('http://localhost:3001/api/reports'),
-          axios.get('http://localhost:3001/api/cctvs'),
-          axios.get('http://localhost:3001/api/smart-city-data')
+          axios.get(`${API_URL}/api/reports`),
+          axios.get(`${API_URL}/api/cctvs`),
+          axios.get(`${API_URL}/api/smart-city-data`)
         ]);
 
         setReports(reportsRes.data);
@@ -151,13 +152,14 @@ const GlobeView = ({ showCCTV, isVisible }) => {
         labelsData={[]}
 
         // Rings for critical/urgent reports
-        ringsData={globeData.filter(d => d.type === 'report' && (d.color === '#ff0000' || d.category === 'fire'))}
+        // Rings only for CRITICAL reports to avoid clutter
+        ringsData={reports.filter(r => r.priorityLevel === 'Critical').slice(0, 10)}
         ringLat="lat"
         ringLng="lng"
-        ringColor={d => d.color}
-        ringMaxRadius={2.5}
-        ringPropagationSpeed={1.5}
-        ringRepeatPeriod={800}
+        ringColor={d => getPriorityColor(d)}
+        ringMaxRadius={1.5}
+        ringPropagationSpeed={0.5}
+        ringRepeatPeriod={2000}
       />
 
       {loading && (
@@ -167,19 +169,19 @@ const GlobeView = ({ showCCTV, isVisible }) => {
       )}
 
       <div className="globe-legend glass-panel" style={{ position: 'absolute', bottom: '2rem', right: '2rem', padding: '1.2rem', pointerEvents: 'none', minWidth: '220px' }}>
-        <h4 style={{ fontSize: '0.7rem', marginBottom: '0.8rem', opacity: 0.7, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SITREP IDENTIFIER</h4>
+        <h4 style={{ fontSize: '0.7rem', marginBottom: '0.8rem', opacity: 0.7, letterSpacing: '0.1em', textTransform: 'uppercase' }}>KETERANGAN SIMBOL</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.72rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: 10, height: 10, background: '#ff0000', borderRadius: '50%', boxShadow: '0 0 10px #ff0000' }}></div>
-            <span>FIRE / HAZARD (Sphere)</span>
+            <span>KEBAKARAN / BAHAYA</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: 10, height: 10, background: '#ff4d4d', clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}></div>
-            <span>CRIME INTEL (Octahedron)</span>
+            <span>KRIMINALITAS / KEJAHATAN</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: 10, height: 10, background: '#3b82f6', borderRadius: '50%', boxShadow: '0 0 10px #3b82f6' }}></div>
-            <span>LIVE CCTV STREAM</span>
+            <span>PANTAUAN CCTV LANGSUNG</span>
           </div>
         </div>
       </div>

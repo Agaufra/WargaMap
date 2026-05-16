@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, useMapEvents, Polyline, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
+import { API_URL } from '../utils/config';
 import ReactPlayer from 'react-player';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Plus, Minus, Home, User, LogIn, CheckCircle, AlertTriangle, Video, Layers, ShieldAlert, Radio, ChevronDown, ChevronUp, MapPin, X, Globe, Map as MapIcon2, Navigation, Route } from 'lucide-react';
@@ -72,7 +73,7 @@ const MapDashboard = ({
   const [infrastructure, setInfrastructure] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showReportOptions, setShowReportOptions] = useState(false);
-  const [isRoutingMode, setIsRoutingMode] = useState(false);
+  const [isRoutingMode, setIsRoutingMode] = useState(true);
   const [currentRouteWaypoints, setCurrentRouteWaypoints] = useState([]);
   const [activeRoute, setActiveRoute] = useState(null);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -109,7 +110,15 @@ const MapDashboard = ({
       const suburb = address.suburb || address.neighbourhood || address.village || '';
       const city = address.city || address.town || address.state_district || address.county || '';
       
-      const fullPlace = [road, suburb, city].filter(Boolean).join(', ');
+      let cityLower = city.toLowerCase();
+      let translatedCity = city;
+      if (cityLower.includes('south jakarta')) translatedCity = 'Jakarta Selatan';
+      else if (cityLower.includes('north jakarta')) translatedCity = 'Jakarta Utara';
+      else if (cityLower.includes('west jakarta')) translatedCity = 'Jakarta Barat';
+      else if (cityLower.includes('east jakarta')) translatedCity = 'Jakarta Timur';
+      else if (cityLower.includes('central jakarta')) translatedCity = 'Jakarta Pusat';
+      
+      const fullPlace = [road, suburb, translatedCity].filter(Boolean).join(', ');
       setRegionName(fullPlace || 'Lokasi Tidak Diketahui');
     } catch (err) {
       console.error('Reverse Geocode failed', err);
@@ -119,7 +128,6 @@ const MapDashboard = ({
 
   const fetchData = async (loc = alertLocation, autoExpand = false) => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const mainRes = await axios.get(`${API_URL}/api/reports`);
 
       // Filter reports within 5 km radius of loc. If no loc (app just opened), show 0 markers.
@@ -185,7 +193,7 @@ const MapDashboard = ({
 
   const fetchSmartCityData = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/smart-city-data');
+      const res = await axios.get(`${API_URL}/api/smart-city-data`);
       setInfrastructure(res.data.infrastructure);
     } catch (err) {
       console.error('Error fetching CCTV data', err);
@@ -236,7 +244,7 @@ const MapDashboard = ({
       return;
     }
     try {
-      await axios.post(`http://localhost:3001/api/reports/${reportId}/vote`, {
+      await axios.post(`${API_URL}/api/reports/${reportId}/vote`, {
         userId: user.id,
         voteType
       });
@@ -269,6 +277,18 @@ const MapDashboard = ({
     return null;
   };
 
+  const MapResizeHandler = () => {
+    const map = useMap();
+    useEffect(() => {
+      const resizeObserver = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      resizeObserver.observe(map.getContainer());
+      return () => resizeObserver.disconnect();
+    }, [map]);
+    return null;
+  };
+
   return (
     <div className="map-container-wrapper" style={{ willChange: 'transform' }}>
 
@@ -286,6 +306,7 @@ const MapDashboard = ({
         {showTraffic && <TrafficLayer />}
         <MapRecenter center={center} zoom={zoom} />
         <MapEventsHandler />
+        <MapResizeHandler />
         {alertLocation && (
           <Marker
             position={[alertLocation.lat, alertLocation.lng]}
@@ -297,30 +318,7 @@ const MapDashboard = ({
                 <strong style={{ fontSize: '0.8rem', color: '#111' }}>Informasi Lokasi & Jalan</strong><br />
                 <div style={{ fontSize: '0.85rem', marginTop: '6px', color: '#2563eb', fontWeight: 'bold' }}>{regionName}</div>
                 <div style={{ fontSize: '0.65rem', color: '#666', marginTop: '6px', marginBottom: '12px' }}>Titik Fokus Pantauan</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button 
-                    style={{ padding: '8px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 6px rgba(59,130,246,0.3)' }}
-                    onClick={() => {
-                      setIsRoutingMode(true);
-                      setRouteStats(null);
-                      const start = myLocation || { lat: alertLocation.lat - 0.01, lng: alertLocation.lng - 0.01 };
-                      setCurrentRouteWaypoints([start, alertLocation]);
-                    }}
-                  >
-                    ➔ Rute: Lokasi Saya ke Sini
-                  </button>
-                  <button 
-                    style={{ padding: '8px 12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 6px rgba(16,185,129,0.3)' }}
-                    onClick={() => {
-                      setIsRoutingMode(true);
-                      setRouteStats(null);
-                      const dest = { lat: alertLocation.lat + 0.01, lng: alertLocation.lng + 0.01 };
-                      setCurrentRouteWaypoints([alertLocation, dest]);
-                    }}
-                  >
-                    ➔ Rute: Dari Sini ke Tempat Lain
-                  </button>
-                </div>
+
               </div>
             </Popup>
           </Marker>
@@ -500,7 +498,7 @@ const MapDashboard = ({
               flexShrink: 0
             }}
           >
-            <h3 style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h3 style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Radio size={12} color={alertLocation ? (isTrackingMe ? '#3b82f6' : '#ef4444') : 'gray'} />
               <span style={{ color: isTrackingMe ? '#3b82f6' : '#ef4444' }}>
                 {isTrackingMe ? 'Lokasi Saya' : 'Nama Lokasi'}: {regionName}
@@ -509,33 +507,7 @@ const MapDashboard = ({
             {showCriticalList ? <ChevronUp size={14} color="gray" /> : <ChevronDown size={14} color="gray" />}
           </div>
 
-          {alertLocation && (
-            <div style={{ padding: '0.6rem', background: 'rgba(59, 130, 246, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ fontSize: '0.6rem', color: '#93c5fd', fontWeight: 'bold' }}>OPSI NAVIGASI PINTAR:</div>
-              <button 
-                style={{ padding: '0.5rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                onClick={() => {
-                  setIsRoutingMode(true);
-                  setRouteStats(null);
-                  const start = myLocation || { lat: alertLocation.lat - 0.01, lng: alertLocation.lng - 0.01 };
-                  setCurrentRouteWaypoints([start, alertLocation]);
-                }}
-              >
-                <Navigation size={12} /> Rute: Lokasi Saya ke Sini
-              </button>
-              <button 
-                style={{ padding: '0.5rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                onClick={() => {
-                  setIsRoutingMode(true);
-                  setRouteStats(null);
-                  const dest = { lat: alertLocation.lat + 0.01, lng: alertLocation.lng + 0.01 };
-                  setCurrentRouteWaypoints([alertLocation, dest]);
-                }}
-              >
-                <Route size={12} /> Rute: Dari Sini ke Titik Lain
-              </button>
-            </div>
-          )}
+
 
           {showCriticalList && (
             <div className="intel-scroll-container" style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
@@ -566,55 +538,15 @@ const MapDashboard = ({
 
 
       <div className="map-action-container">
-        {/* Only show standard report option here if using dropdown model, but single report button is better now */}
-
-        {!isRoutingMode ? (
-          <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
-            <button className="btn-secondary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6', color: '#93c5fd', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => {
-              setIsRoutingMode(true);
-              setRouteStats(null);
-              const target = alertLocation || (center ? { lat: center[0] || center.lat, lng: center[1] || center.lng } : { lat: -6.5971, lng: 106.7997 });
-              const start = myLocation || { lat: target.lat - 0.01, lng: target.lng - 0.01 };
-              setCurrentRouteWaypoints([start, target]);
-            }}>
-              <Navigation size={14} /> ➔ Rute: Lokasi Saya ke Sini
-            </button>
-
-            <button className="btn-secondary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10b981', color: '#6ee7b7', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => {
-              setIsRoutingMode(true);
-              setRouteStats(null);
-              const target = alertLocation || (center ? { lat: center[0] || center.lat, lng: center[1] || center.lng } : { lat: -6.5971, lng: 106.7997 });
-              const dest = { lat: target.lat + 0.01, lng: target.lng + 0.01 };
-              setCurrentRouteWaypoints([target, dest]);
-            }}>
-              <Route size={14} /> ➔ Rute: Dari Sini ke Titik Lain
-            </button>
-
-            <button className="btn-primary" style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setIsModalOpen(true)}>
-              <Plus size={14} /> Report Issue
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-            <button 
-              className="btn-secondary" 
-              style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.8rem', backdropFilter: 'blur(8px)' }} 
-              onClick={() => {
-                setIsRoutingMode(false);
-                setRouteStats(null);
-              }}
-            >
-              Batal
-            </button>
-            <button 
-              className="btn-primary" 
-              style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', boxShadow: '0 8px 25px rgba(99, 102, 241, 0.4)', fontSize: '0.8rem', whiteSpace: 'nowrap' }} 
-              onClick={() => setIsModalOpen(true)}
-            >
-              <CheckCircle size={16} /> Laporkan ke Publik
-            </button>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          <button
+            className="btn-primary"
+            style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            onClick={() => setIsModalOpen(true)}
+          >
+            <Plus size={14} /> Report Issue
+          </button>
+        </div>
       </div>
 
       {isModalOpen && (
@@ -640,6 +572,9 @@ const MapDashboard = ({
           onPublish={() => setIsModalOpen(true)}
           routeStats={routeStats}
           initialWaypoints={currentRouteWaypoints}
+          myLocation={myLocation}
+          alertLocation={alertLocation}
+          center={center}
         />
       )}
 
@@ -660,7 +595,7 @@ const MapDashboard = ({
           <div style={{ padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ fontSize: '0.7rem', color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 6, height: 6, background: '#ef4444', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
-              LIVE MONITOR: {regionName.toUpperCase()}
+              LIVE MONITOR: {regionName}
             </div>
             <X
               size={16}

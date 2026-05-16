@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@noble/ciphers": "^2.2.0",
     "axios": "^1.14.0",
+    "crypto-js": "^4.2.0",
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "leaflet.markercluster": "^1.5.3",

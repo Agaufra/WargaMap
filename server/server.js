@@ -6,6 +6,7 @@ const { initDb } = require('./db');
 const { calculatePriorityScore } = require('./ai-scoring');
 const { fetchNewsAndIngest } = require('./news-service');
 const { generateRecommendation } = require('./gemini-service');
+const { decryptAES, decryptChaCha20 } = require('./crypto');
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -65,10 +66,14 @@ async function start() {
 
   // --- AUTHENTICATION ROUTES ---
 
-  // 1. Register User (with KTP Simulation)
+  // 1. Register User (with AES-128 Decryption)
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { name, username, ktpNumber, password } = req.body;
+      const { data } = req.body;
+      const decrypted = decryptAES(data);
+      if (!decrypted) return res.status(400).json({ error: 'Invalid Encrypted Data' });
+
+      const { name, username, ktpNumber, password } = decrypted;
       const result = await db.run(
         'INSERT INTO users (name, username, ktpNumber, password, createdAt) VALUES (?, ?, ?, ?, ?)',
         [name, username, ktpNumber, password, Date.now()]
@@ -83,10 +88,14 @@ async function start() {
     }
   });
 
-  // 2. Login User
+  // 2. Login User (with AES-128 Decryption)
   app.post('/api/auth/login', async (req, res) => {
     try {
-      const { identity, password } = req.body; // identity can be KTP or Username
+      const { data } = req.body;
+      const decrypted = decryptAES(data);
+      if (!decrypted) return res.status(400).json({ error: 'Invalid Encrypted Data' });
+
+      const { identity, password } = decrypted; // identity can be KTP or Username
       const user = await db.get(
         'SELECT * FROM users WHERE (ktpNumber = ? OR username = ?) AND password = ?',
         [identity, identity, password]
@@ -298,13 +307,16 @@ async function start() {
 
     socket.on('chatMessage', async (data) => {
       try {
-        const { userId, message } = data;
+        const { userId, message } = data; // message is now an object { nonce, ciphertext }
         if (!userId || !message) return;
+
+        // Note: For E2EE, we store the encrypted object as a JSON string in the DB
+        const messageString = JSON.stringify(message);
 
         const createdAt = Date.now();
         const result = await db.run(
           'INSERT INTO chats (userId, message, createdAt) VALUES (?, ?, ?)',
-          [userId, message, createdAt]
+          [userId, messageString, createdAt]
         );
 
         const newChat = await db.get(`

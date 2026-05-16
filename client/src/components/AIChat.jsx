@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Bot, Send, MapPin, X, Navigation } from 'lucide-react';
+import { API_URL } from '../utils/config';
 import '../AIChat.css';
 
 const AIChat = ({ currentMapCenter, onViewChange, regionName }) => {
@@ -29,7 +30,7 @@ const AIChat = ({ currentMapCenter, onViewChange, regionName }) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3001/api/ai/recommend', {
+      const response = await axios.post(`${API_URL}/api/ai/recommend`, {
         query: userMessage.content,
         currentMapCenter: currentMapCenter
       });
