@@ -132,8 +132,8 @@ const MapDashboard = ({
       const allReports = Array.isArray(mainRes.data) 
         ? mainRes.data.map(r => ({
             ...r,
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lng)
+            lat: parseFloat(r.lat || r.Lat || r.latitude || 0),
+            lng: parseFloat(r.lng || r.Lng || r.longitude || 0)
           }))
         : [];
 
@@ -161,11 +161,11 @@ const MapDashboard = ({
       const fetchedReports = Array.isArray(criticalRes.data) 
         ? criticalRes.data.map(r => ({
             ...r,
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lng)
+            lat: parseFloat(r.lat || r.Lat || r.latitude || 0),
+            lng: parseFloat(r.lng || r.Lng || r.longitude || 0)
           }))
         : [];
-      setReports(filteredReports);
+      setReports(allReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
@@ -173,8 +173,8 @@ const MapDashboard = ({
       const cameras = Array.isArray(cctvRes.data) 
         ? cctvRes.data.map(c => ({
             ...c,
-            lat: parseFloat(c.lat),
-            lng: parseFloat(c.lng)
+            lat: parseFloat(c.lat || c.Lat || c.latitude || 0),
+            lng: parseFloat(c.lng || c.Lng || c.longitude || 0)
           }))
         : [];
       setCCTVs(cameras);
