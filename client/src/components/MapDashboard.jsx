@@ -55,12 +55,12 @@ const createUserIcon = () => {
   return new L.DivIcon({
     className: 'custom-user-icon',
     html: `
-      <div style="background-color: #6366f1; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5); position: relative;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #6366f1; animation: user-pulse-premium 2s infinite; pointer-events: none;"></div>
+      <div style="background-color: #6366f1; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4); position: relative;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 1.5px solid #6366f1; animation: user-pulse-premium 2.5s infinite; pointer-events: none;"></div>
       </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    iconSize: [22, 22],
+    iconAnchor: [11, 11]
   });
 };
 
