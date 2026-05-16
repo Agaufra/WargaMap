@@ -5,12 +5,33 @@ const AES_KEY = 'cs_128_bit_key_!';
 const CHACHA_KEY = Buffer.from('cs_256_bit_secure_chat_key_!!!_').slice(0, 32);
 
 /**
- * AES-128 for Auth (Using CryptoJS for consistency with client)
+ * AES-128 for Auth (Deterministic for Searchable DB)
  */
+const key = CryptoJS.enc.Utf8.parse(AES_KEY.padEnd(16, '!').slice(0, 16));
+
+function encryptAES(data) {
+  try {
+    const text = JSON.stringify(data);
+    const encrypted = CryptoJS.AES.encrypt(text, key, {
+      iv: key, // Using key as IV for deterministic encryption
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    return encrypted.toString();
+  } catch (e) {
+    console.error('[CRYPTO] AES Encryption Error:', e.message);
+    return null;
+  }
+}
+
 function decryptAES(ciphertext) {
   try {
-    const bytes = CryptoJS.AES.decrypt(ciphertext, AES_KEY);
-    const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+      iv: key,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    const decryptedData = JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
     return decryptedData;
   } catch (e) {
     console.error('[CRYPTO] AES Decryption Error:', e.message);
@@ -52,4 +73,13 @@ function encryptChaCha20(text) {
   }
 }
 
-module.exports = { decryptAES, decryptChaCha20, encryptChaCha20 };
+function encryptAES(data) {
+  try {
+    return CryptoJS.AES.encrypt(JSON.stringify(data), AES_KEY).toString();
+  } catch (e) {
+    console.error('[CRYPTO] AES Encryption Error:', e.message);
+    return null;
+  }
+}
+
+module.exports = { decryptAES, encryptAES, decryptChaCha20, encryptChaCha20 };

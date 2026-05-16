@@ -6,17 +6,28 @@ import { utf8ToBytes, bytesToUtf8, hexToBytes, bytesToHex } from '@noble/ciphers
 const AES_KEY = 'cs_128_bit_key_!'; // 16 characters = 128 bits
 const CHACHA_KEY = utf8ToBytes('cs_256_bit_secure_chat_key_!!!_').slice(0, 32); // 32 bytes = 256 bits
 
+const key = CryptoJS.enc.Utf8.parse(AES_KEY.padEnd(16, '!').slice(0, 16));
+
 /**
- * AES-128 Encryption for Auth
+ * AES-128 Encryption for Auth (Deterministic)
  */
 export const encryptAES = (data) => {
-  const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), AES_KEY).toString();
-  return ciphertext;
+  const text = JSON.stringify(data);
+  const encrypted = CryptoJS.AES.encrypt(text, key, {
+    iv: key,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  });
+  return encrypted.toString();
 };
 
 export const decryptAES = (ciphertext) => {
-  const bytes = CryptoJS.AES.decrypt(ciphertext, AES_KEY);
-  const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+  const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+    iv: key,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  });
+  const decryptedData = JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
   return decryptedData;
 };
 

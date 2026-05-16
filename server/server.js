@@ -78,9 +78,14 @@ async function start() {
       if (!decrypted) return res.status(400).json({ error: 'Invalid Encrypted Data' });
 
       const { name, username, ktpNumber, password } = decrypted;
+      
+      // Encrypt sensitive data for Database Storage
+      const encryptedKtp = encryptAES(ktpNumber);
+      const encryptedPassword = encryptAES(password);
+
       const result = await db.run(
         'INSERT INTO users (name, username, ktpNumber, password, createdAt) VALUES (?, ?, ?, ?, ?)',
-        [name, username, ktpNumber, password, Date.now()]
+        [name, username, encryptedKtp, encryptedPassword, Date.now()]
       );
       res.status(201).json({ id: result.lastID, name, username, trustScore: 50 });
     } catch (err) {
@@ -100,12 +105,23 @@ async function start() {
       if (!decrypted) return res.status(400).json({ error: 'Invalid Encrypted Data' });
 
       const { identity, password } = decrypted; // identity can be KTP or Username
+      
+      // Encrypt for DB lookup (Deterministic)
+      const encryptedIdentity = encryptAES(identity);
+      const encryptedPassword = encryptAES(password);
+
       const user = await db.get(
-        'SELECT id, name, username, ktpNumber AS "ktpNumber", password, trustScore AS "trustScore" FROM users WHERE (ktpNumber = ? OR username = ?) AND password = ?',
-        [identity, identity, password]
+        'SELECT id, name, username, ktpNumber, password, trustScore FROM users WHERE (ktpNumber = ? OR username = ?) AND password = ?',
+        [encryptedIdentity, identity, encryptedPassword]
       );
+
       if (user) {
-        res.json({ id: user.id, name: user.name, username: user.username, trustScore: user.trustScore });
+        res.json({ 
+          id: user.id, 
+          name: user.name, 
+          username: user.username, 
+          trustScore: user.trustScore 
+        });
       } else {
         res.status(401).json({ error: 'Invalid Identity or Password.' });
       }
