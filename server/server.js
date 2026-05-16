@@ -370,13 +370,12 @@ async function start() {
 
     socket.on('chatMessage', async (data) => {
       try {
-        const { userId, message } = data; // message is now an object { nonce, ciphertext }
+        const { userId, message, tempId } = data; 
         if (!userId || !message) return;
 
-        // Note: For E2EE, we store the encrypted object as a JSON string in the DB
         const messageString = JSON.stringify(message);
-
         const createdAt = Date.now();
+        
         const result = await db.run(
           'INSERT INTO chats (userId, message, createdAt) VALUES (?, ?, ?)',
           [userId, messageString, createdAt]
@@ -389,8 +388,8 @@ async function start() {
           WHERE c.id = ?
         `, result.lastID);
 
-        // Broadcast to everyone
-        io.emit('newMessage', newChat);
+        // Broadcast to everyone, including tempId for reconciliation
+        io.emit('newMessage', { ...newChat, tempId });
       } catch (err) {
         console.error('[Socket] Error saving chat message:', err.message);
       }

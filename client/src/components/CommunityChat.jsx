@@ -54,23 +54,33 @@ const CommunityChat = ({ user, onLoginClick }) => {
 
     // Listen for real-time messages
     socket.on('newMessage', (newMsg) => {
+      console.log('[Chat] Received new message:', newMsg);
       // Decrypt the incoming message
       let decryptedMsg = newMsg;
       try {
-        const encryptedObj = JSON.parse(newMsg.message);
+        const encryptedObj = typeof newMsg.message === 'string' 
+          ? JSON.parse(newMsg.message) 
+          : newMsg.message;
+          
         decryptedMsg = { ...newMsg, message: decryptChaCha20(encryptedObj) };
       } catch (e) {
-        console.warn('Received unencrypted message');
+        console.warn('[Chat] Failed to decrypt message:', e);
       }
 
       setMessages((prev) => {
-        if (prev.find((m) => m.id === newMsg.id)) return prev;
+        // Prevent duplicates (especially if we added it optimistically)
+        if (prev.find((m) => (m.id && m.id === newMsg.id) || (m.tempId && m.tempId === newMsg.tempId))) return prev;
         return [...prev, decryptedMsg];
       });
     });
 
+    socket.on('connect_error', (err) => {
+      console.error('[Chat] Socket connection error:', err);
+    });
+
     return () => {
       socket.off('newMessage');
+      socket.off('connect_error');
     };
   }, []);
 
@@ -82,20 +92,37 @@ const CommunityChat = ({ user, onLoginClick }) => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim() || !user) return;
 
     const msg = inputMessage;
+    const tempId = Date.now();
     setInputMessage('');
 
     // Encrypt message using ChaCha20
     const encryptedMsg = encryptChaCha20(msg);
 
-    // Send through WebSocket to broadcast instantly
+    // Optimistic UI update
+    const optimisticMsg = {
+      id: null,
+      tempId,
+      userId: user.id,
+      userName: user.name,
+      userHandle: user.username,
+      trustScore: user.trustScore,
+      message: msg,
+      createdAt: Date.now(),
+      isOptimistic: true
+    };
+    
+    setMessages(prev => [...prev, optimisticMsg]);
+
+    // Send through WebSocket to broadcast
     socket.emit('chatMessage', {
       userId: user.id,
-      message: encryptedMsg
+      message: encryptedMsg,
+      tempId // Pass tempId so we can reconcile it later if needed
     });
   };
 
