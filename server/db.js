@@ -10,6 +10,11 @@ async function initDb() {
 
   if (isPostgres) {
     console.log('[DATABASE] Using PostgreSQL (Production)');
+    const { types } = require('pg');
+    types.setTypeParser(20, function(val) {
+      return parseInt(val, 10);
+    });
+
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: {
