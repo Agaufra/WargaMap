@@ -235,7 +235,7 @@ async function start() {
       }
 
       // Fetch non-resolved reports
-      let reports = await db.all('SELECT id, title, description, category, lat, lng, image, status, priorityScore AS "priorityScore", priorityLevel AS "priorityLevel", source, url, userId AS "userId", upvotes, downvotes, routeData AS "routeData", createdAt AS "createdAt" FROM reports WHERE status != \'Resolved\' ORDER BY priorityscore DESC');
+      let reports = await db.all('SELECT id, title, description, category, lat, lng, image, status, priorityScore AS "priorityScore", priorityLevel AS "priorityLevel", source, url, userId AS "userId", upvotes, downvotes, routeData AS "routeData", createdAt AS "createdAt" FROM reports WHERE (status != \'Resolved\' OR status IS NULL) ORDER BY priorityscore DESC');
 
       // STRICT ENFORCEMENT: If no valid coordinates, return empty list (prevent nationwide leakage)
       if (isNaN(targetLat) || isNaN(targetLng)) {

@@ -165,7 +165,7 @@ const MapDashboard = ({
             lng: parseFloat(r.lng)
           }))
         : [];
-      setReports(allReports);
+      setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
