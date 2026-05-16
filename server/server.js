@@ -290,6 +290,33 @@ async function start() {
   };
   await seedCCTVs();
 
+  app.get('/api/debug-db', async (req, res) => {
+    try {
+      const reportsCount = await db.get('SELECT COUNT(*) as count FROM reports');
+      const cctvCount = await db.get('SELECT COUNT(*) as count FROM cctvs');
+      const firstReport = await db.get('SELECT id, title, lat, lng FROM reports LIMIT 1');
+      const firstCCTV = await db.get('SELECT id, name, lat, lng FROM cctvs LIMIT 1');
+      
+      res.json({
+        database: process.env.DATABASE_URL ? 'PostgreSQL' : 'SQLite',
+        env: {
+          DATABASE_URL: process.env.DATABASE_URL ? 'PRESENT' : 'MISSING',
+          PORT: process.env.PORT || '3001'
+        },
+        counts: { 
+          reports: reportsCount ? reportsCount.count : 0, 
+          cctvs: cctvCount ? cctvCount.count : 0 
+        },
+        samples: { 
+          report: firstReport, 
+          cctv: firstCCTV 
+        }
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get('/api/cctvs', async (req, res) => {
     try {
       const cameras = await db.all('SELECT id, name, lat, lng, streamUrl AS "streamUrl", status FROM cctvs');
