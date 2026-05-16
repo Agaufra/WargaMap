@@ -4,7 +4,7 @@ import { utf8ToBytes, bytesToUtf8, hexToBytes, bytesToHex } from '@noble/ciphers
 
 // Standard keys for demonstration (In production, use environment variables)
 const AES_KEY = 'cs_128_bit_key_!'; // 16 characters = 128 bits
-const CHACHA_KEY = utf8ToBytes('cs_256_bit_secure_chat_key_!!!_').slice(0, 32); // 32 bytes = 256 bits
+const CHACHA_KEY = utf8ToBytes('cs_256_bit_secure_chat_key_!!!!_').slice(0, 32); // 32 bytes = 256 bits
 
 const key = CryptoJS.enc.Utf8.parse(AES_KEY.padEnd(16, '!').slice(0, 16));
 
