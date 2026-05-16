@@ -51,6 +51,20 @@ const createHackerIcon = () => {
 };
 
 
+const createUserIcon = () => {
+  return new L.DivIcon({
+    className: 'custom-user-icon',
+    html: `
+      <div class="user-location-marker">
+        <div class="user-pulse"></div>
+        <div class="user-dot"></div>
+      </div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+};
+
+
 const getPriorityColor = (report) => {
   if (report.source === 'news') return '#3b82f6';
   switch (report.priorityLevel) {
@@ -347,6 +361,21 @@ const MapDashboard = ({
                 <div style={{ fontSize: '0.85rem', marginTop: '6px', color: '#2563eb', fontWeight: 'bold' }}>{regionName}</div>
                 <div style={{ fontSize: '0.65rem', color: '#666', marginTop: '6px', marginBottom: '12px' }}>Titik Fokus Pantauan</div>
 
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* USER LOCATION MARKER (Blue Pulse) */}
+        {myLocation && (
+          <Marker
+            position={[myLocation.lat, myLocation.lng]}
+            icon={createUserIcon()}
+            zIndexOffset={1100}
+          >
+            <Popup>
+              <div style={{ color: '#333', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                Lokasi Anda Sekarang
               </div>
             </Popup>
           </Marker>
