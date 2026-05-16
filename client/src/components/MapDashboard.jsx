@@ -131,29 +131,14 @@ const MapDashboard = ({
       const mainRes = await axios.get(`${API_URL}/api/reports`);
       const allReports = Array.isArray(mainRes.data) ? mainRes.data : [];
 
-      // Filter reports within 5 km radius of loc. If no loc (app just opened), show 0 markers.
-      let filteredReports = [];
-      if (loc && loc.lat && loc.lng) {
-        filteredReports = allReports.filter(r => {
-          if (!r.lat || !r.lng) return false;
-          const R = 6371; // km
-          const dLat = (r.lat - loc.lat) * Math.PI / 180;
-          const dLon = (r.lng - loc.lng) * Math.PI / 180;
-          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(loc.lat * Math.PI / 180) * Math.cos(r.lat * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          const distance = R * c;
-          return distance <= 5;
-        });
-      }
+      // Display all nationwide reports on the map (clustering will handle UI performance)
+      setReports(allReports);
 
       // Fetch localized top-critical alerts
       const queryParams = loc ? `?lat=${loc.lat}&lng=${loc.lng}` : '';
       const criticalRes = await axios.get(`${API_URL}/api/reports/top-critical${queryParams}`);
 
       const fetchedReports = Array.isArray(criticalRes.data) ? criticalRes.data : [];
-      setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
