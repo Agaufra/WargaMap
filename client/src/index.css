@@ -1670,9 +1670,17 @@ h6 {
   }
 
   .bottom-monitor-section {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     flex-direction: column;
     min-height: auto;
+    height: auto;
+  }
+
+  .bottom-monitor-section.collapsed {
+    flex: 0 0 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: visible; /* Ensure toggle handle remains visible */
   }
 
   /* 2. Navigation & Header adjustments */
@@ -1760,8 +1768,15 @@ h6 {
     height: 50px;
   }
 
-  .map-navigation-toolbar {
-    right: 1rem;
+  .bottom-toggle-handle {
+    top: -32px !important;
+    width: 60px !important;
+    height: 32px !important;
+    border-radius: 12px 12px 0 0 !important;
+    background: #6366f1 !important; /* Make it solid blue like the launcher */
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.3) !important;
   }
 
   .map-action-container {
