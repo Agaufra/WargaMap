@@ -1665,6 +1665,18 @@ h6 {
   .logo span {
     font-size: 1.2rem;
   }
+
+  /* Compact floating intelligence panel on tablets */
+  .floating-panel {
+    top: 1rem !important;
+    left: 1rem !important;
+    width: 250px !important;
+    max-height: 250px !important;
+  }
+
+  .intel-scroll-container {
+    max-height: 150px !important;
+  }
 }
 
 /* ================== MOBILE < 768px ================== */
@@ -1822,9 +1834,9 @@ h6 {
   .floating-panel {
     top: 0.5rem !important;
     left: 0.5rem !important;
-    width: calc(100% - 75px) !important; /* Leave room for Leaflet controls on the right */
-    max-height: 250px !important;
-    gap: 0.5rem !important;
+    width: 230px !important; /* Extremely neat and narrow on mobile! */
+    max-height: 200px !important;
+    gap: 0.3rem !important;
   }
 
   .floating-panel .glass-panel {
@@ -1832,24 +1844,42 @@ h6 {
   }
 
   .floating-panel h3 {
-    font-size: 0.65rem !important;
+    font-size: 0.6rem !important;
+  }
+
+  .floating-panel h3 span {
+    font-size: 0.6rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 140px !important; /* Truncate very long location names! */
+    display: inline-block !important;
+    vertical-align: middle !important;
   }
 
   .intel-scroll-container {
-    max-height: 160px !important; /* Keep it compact */
+    padding: 0.4rem !important;
+    max-height: 110px !important; /* Scroll if it gets too long, keeps map open */
+  }
+
+  .intel-scroll-container div:first-child {
+    font-size: 0.5rem !important;
   }
 
   .issue-card {
-    padding: 0.4rem 0.5rem !important;
+    padding: 0.3rem 0.4rem !important;
     margin-bottom: 2px !important;
+    border-radius: 4px !important;
   }
 
   .issue-title {
-    font-size: 0.65rem !important;
+    font-size: 0.55rem !important;
+    letter-spacing: 0.05em !important;
   }
 
   .issue-meta {
-    font-size: 0.5rem !important;
+    font-size: 0.45rem !important;
+    margin-top: 1px !important;
   }
 }
 
