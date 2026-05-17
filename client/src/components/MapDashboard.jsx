@@ -91,6 +91,7 @@ const MapDashboard = ({
   const [currentRouteWaypoints, setCurrentRouteWaypoints] = useState([]);
   const [activeRoute, setActiveRoute] = useState(null);
   const [showTraffic, setShowTraffic] = useState(false);
+  const [showTomTomWarning, setShowTomTomWarning] = useState(false);
 
   // Routing Panel States
   const [routeStats, setRouteStats] = useState(null);
@@ -504,6 +505,7 @@ const MapDashboard = ({
           detectLocation={detectLocation}
           showTraffic={showTraffic}
           setShowTraffic={setShowTraffic}
+          setShowTomTomWarning={setShowTomTomWarning}
         />
 
         {activeRoute && Array.isArray(activeRoute) && (
@@ -683,11 +685,105 @@ const MapDashboard = ({
                     `}</style>
         </div>
       )}
+
+      {showTomTomWarning && (
+        <div style={{
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="glass-panel" style={{
+            width: '100%',
+            maxWidth: '380px',
+            padding: '1.5rem',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+            animation: 'fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(15, 15, 20, 0.95)',
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ef4444'
+            }}>
+              <ShieldAlert size={24} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <h3 style={{ fontSize: '1rem', color: 'white', fontWeight: '600', margin: 0 }}>
+                API Key Belum Dikonfigurasi
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                Fitur <strong>Live Traffic</strong> memerlukan <strong>TomTom API Key</strong> yang valid untuk memuat data kemacetan lalu lintas secara real-time.
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '8px',
+              padding: '0.6rem',
+              width: '100%',
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.6)',
+              textAlign: 'left',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              <div><strong>Solusi Pemilik App:</strong></div>
+              <div>1. Dapatkan API Key gratis di <a href="https://developer.tomtom.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', textDecoration: 'underline' }}>developer.tomtom.com</a></div>
+              <div>2. Tambahkan variabel lingkungan ini ke file <code>.env</code> Anda:</div>
+              <code style={{ background: '#000', padding: '4px 6px', borderRadius: '4px', fontSize: '0.65rem', display: 'block', color: '#a5b4fc', wordBreak: 'break-all', marginTop: '4px' }}>
+                VITE_TOMTOM_API_KEY=Kunci_API_Anda
+              </code>
+            </div>
+
+            <button
+              onClick={() => setShowTomTomWarning(false)}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '0.6rem 1rem',
+                borderRadius: '8px',
+                background: 'var(--acc-primary)',
+                color: 'white',
+                border: 'none',
+                fontWeight: '600',
+                fontSize: '0.75rem',
+                cursor: 'pointer'
+              }}
+            >
+              Saya Mengerti
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const MapNavigation = ({ setMapStyle, mapStyle, onViewChange, detectLocation, showTraffic, setShowTraffic }) => {
+const MapNavigation = ({ setMapStyle, mapStyle, onViewChange, detectLocation, showTraffic, setShowTraffic, setShowTomTomWarning }) => {
   const map = useMap();
   const navRef = useRef(null);
 
@@ -718,7 +814,14 @@ const MapNavigation = ({ setMapStyle, mapStyle, onViewChange, detectLocation, sh
 
       <div className="nav-control-block" style={{ marginTop: '8px' }}>
         <button
-          onClick={() => setShowTraffic(!showTraffic)}
+          onClick={() => {
+            const tomtomKey = import.meta.env.VITE_TOMTOM_API_KEY;
+            if (!tomtomKey) {
+              setShowTomTomWarning(true);
+            } else {
+              setShowTraffic(!showTraffic);
+            }
+          }}
           className={showTraffic ? 'active' : ''}
           title="Live Traffic"
           style={{ color: showTraffic ? '#ef4444' : 'inherit' }}
