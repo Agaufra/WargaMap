@@ -33,7 +33,7 @@ const Navigation = ({ showCCTV, setShowCCTV, user, logout, setShowLogin, setIsRe
     <nav className="navbar">
       <div className="nav-left">
         <Link to="/" className="logo">
-          <img src={logoImage} alt="WargaLyzer Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }}
+          <img src={logoImage} alt="WargaMap Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }}
             className="logo-img"
           />
           <span>WargaMap</span>
@@ -366,7 +366,7 @@ function App() {
               </div>
 
               <h2 className="auth-header-title">
-                {isRegistering ? 'Sign up for WargaLyzer' : 'Sign in to WargaLyzer'}
+                {isRegistering ? 'Sign up for WargaMap' : 'Sign in to WargaMap'}
               </h2>
               <p className="auth-header-subtitle">
                 {isRegistering ? 'Join the community and start exploring smarter city insights' : 'Welcome back! Please sign in to continue and access'}
