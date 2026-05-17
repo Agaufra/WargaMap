@@ -1807,6 +1807,40 @@ h6 {
     padding: 0.6rem 1rem !important;
     font-size: 0.8rem;
   }
+
+  /* 5. Floating Intel Panel mobile adjustments */
+  .floating-panel {
+    top: 0.5rem !important;
+    left: 0.5rem !important;
+    width: calc(100% - 75px) !important; /* Leave room for Leaflet controls on the right */
+    max-height: 250px !important;
+    gap: 0.5rem !important;
+  }
+
+  .floating-panel .glass-panel {
+    border-radius: 8px !important;
+  }
+
+  .floating-panel h3 {
+    font-size: 0.65rem !important;
+  }
+
+  .intel-scroll-container {
+    max-height: 160px !important; /* Keep it compact */
+  }
+
+  .issue-card {
+    padding: 0.4rem 0.5rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .issue-title {
+    font-size: 0.65rem !important;
+  }
+
+  .issue-meta {
+    font-size: 0.5rem !important;
+  }
 }
 
 /* ==========================================================================
