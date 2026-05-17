@@ -114,8 +114,8 @@ function App() {
   const [showCCTV, setShowCCTV] = React.useState(false);
   const [viewMode, setViewMode] = React.useState('2D');
   const [mapFocus, setMapFocus] = React.useState({
-    center: [-2.5, 118.0],
-    zoom: 5
+    center: [-6.5971, 106.7997],
+    zoom: 13
   });
   const [mapStyle, setMapStyle] = React.useState('satellite');
   const [isAIChatOpen, setIsAIChatOpen] = React.useState(false);

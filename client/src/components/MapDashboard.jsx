@@ -322,7 +322,7 @@ const MapDashboard = ({
         fetchSmartCityData();
         fetchData(null, false);
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
   };
 

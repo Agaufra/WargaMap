@@ -1743,8 +1743,7 @@ h6 {
 
   /* 1. App Layout adjustments */
   .app-main-layout {
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     height: calc(100% - 94px) !important; /* Adjust for 2-row navbar height */
   }
 
