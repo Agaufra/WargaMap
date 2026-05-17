@@ -1664,9 +1664,18 @@ h6 {
     height: calc(100vh - 60px); /* Adjust for navbar height */
   }
 
+  .app-main-layout.bottom-collapsed {
+    overflow: hidden;
+  }
+
   .main-map-section {
     flex: 0 0 45vh;
     min-height: 350px;
+  }
+
+  .app-main-layout.bottom-collapsed .main-map-section {
+    flex: 1 1 100%;
+    height: 100%;
   }
 
   .bottom-monitor-section {

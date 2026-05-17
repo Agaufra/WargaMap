@@ -173,7 +173,7 @@ function App() {
   const handleAuth = async (e) => {
     e.preventDefault();
     try {
-      
+
       // Encrypt the entire payload using AES-128
       const payload = isRegistering ? {
         name: loginData.name,
@@ -251,7 +251,7 @@ function App() {
           />
           <Routes>
             <Route path="/" element={
-              <main className="app-main-layout">
+              <main className={`app-main-layout ${!isBottomBarOpen ? 'bottom-collapsed' : ''}`}>
                 <div className="main-map-section" style={{ position: 'relative' }}>
                   <div style={{ display: 'contents' }}>
                     <MapDashboard
@@ -284,7 +284,7 @@ function App() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className={`bottom-monitor-section ${!isBottomBarOpen ? 'collapsed' : ''}`}>
                   <button
                     className={`bottom-toggle-handle ${!isBottomBarOpen ? 'collapsed' : ''}`}
@@ -293,7 +293,7 @@ function App() {
                   >
                     {isBottomBarOpen ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
                   </button>
-                  
+
                   <div className="ai-hub-section" style={{
                     padding: isAIChatOpen ? '0' : '10px',
                     justifyContent: isAIChatOpen ? 'flex-start' : 'center',
