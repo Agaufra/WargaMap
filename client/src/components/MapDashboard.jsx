@@ -92,6 +92,8 @@ const MapDashboard = ({
   const [activeRoute, setActiveRoute] = useState(null);
   const [showTraffic, setShowTraffic] = useState(false);
   const [showTomTomWarning, setShowTomTomWarning] = useState(false);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawingPath, setDrawingPath] = useState([]);
 
   // Routing Panel States
   const [routeStats, setRouteStats] = useState(null);
@@ -146,10 +148,10 @@ const MapDashboard = ({
       const mainRes = await axios.get(`${API_URL}/api/reports`);
       const rawReports = Array.isArray(mainRes.data) ? mainRes.data : (mainRes.data?.Reports || mainRes.data?.reports || []);
       const allReports = Array.isArray(rawReports) ? rawReports.map(r => ({
-            ...r,
-            lat: parseFloat(r?.lat || r?.Lat || r?.latitude || 0),
-            lng: parseFloat(r?.lng || r?.Lng || r?.longitude || 0)
-          })) : [];
+        ...r,
+        lat: parseFloat(r?.lat || r?.Lat || r?.latitude || 0),
+        lng: parseFloat(r?.lng || r?.Lng || r?.longitude || 0)
+      })) : [];
 
       // Filter reports within 5 km radius of loc. If no loc (app just opened), show 0 markers.
       let filteredReports = [];
@@ -174,34 +176,34 @@ const MapDashboard = ({
 
       const rawCritical = Array.isArray(criticalRes.data) ? criticalRes.data : (criticalRes.data?.Reports || criticalRes.data?.reports || []);
       const fetchedReports = Array.isArray(rawCritical) ? rawCritical.map(r => ({
-            ...r,
-            lat: parseFloat(r?.lat || r?.Lat || r?.latitude || 0),
-            lng: parseFloat(r?.lng || r?.Lng || r?.longitude || 0)
-          })) : [];
+        ...r,
+        lat: parseFloat(r?.lat || r?.Lat || r?.latitude || 0),
+        lng: parseFloat(r?.lng || r?.Lng || r?.longitude || 0)
+      })) : [];
       setReports(filteredReports);
       setTopCritical(fetchedReports);
 
       // Fetch CCTV data
       const cctvRes = await axios.get(`${API_URL}/api/cctvs`);
       const rawCCTVs = Array.isArray(cctvRes.data) ? cctvRes.data : (cctvRes.data?.CCTVs || cctvRes.data?.cctvs || []);
-      
+
       const referenceLoc = loc || { lat: center[0] || center.lat, lng: center[1] || center.lng };
 
       const cameras = Array.isArray(rawCCTVs) ? rawCCTVs.map(c => ({
-            ...c,
-            lat: parseFloat(c?.lat || c?.Lat || c?.latitude || 0),
-            lng: parseFloat(c?.lng || c?.Lng || c?.longitude || 0)
-          })).filter(c => {
-            if (!c.lat || !c.lng || !referenceLoc) return false;
-            const R = 6371;
-            const dLat = (c.lat - referenceLoc.lat) * Math.PI / 180;
-            const dLon = (c.lng - referenceLoc.lng) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(referenceLoc.lat * Math.PI / 180) * Math.cos(c.lat * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return d <= 5; // Radius 5km
-          })
+        ...c,
+        lat: parseFloat(c?.lat || c?.Lat || c?.latitude || 0),
+        lng: parseFloat(c?.lng || c?.Lng || c?.longitude || 0)
+      })).filter(c => {
+        if (!c.lat || !c.lng || !referenceLoc) return false;
+        const R = 6371;
+        const dLat = (c.lat - referenceLoc.lat) * Math.PI / 180;
+        const dLon = (c.lng - referenceLoc.lng) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(referenceLoc.lat * Math.PI / 180) * Math.cos(c.lat * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return d <= 5; // Radius 5km
+      })
         : [];
       setCCTVs(cameras);
 
@@ -309,6 +311,10 @@ const MapDashboard = ({
     const map = useMapEvents({
       click: (e) => {
         const { lat, lng } = e.latlng;
+        if (isDrawingMode) {
+          setDrawingPath(prev => [...prev, [lat, lng]]);
+          return;
+        }
         const newLoc = { lat, lng };
         setIsTrackingMe(false);
         onViewChange([lat, lng], map.getZoom(), 'click', newLoc);
@@ -429,73 +435,73 @@ const MapDashboard = ({
 
         {/* INCIDENT REPORTS with Clustering */}
         {/* Direct Marker Rendering (No Clustering to avoid production rendering bugs) */}
-          {reports.map((report) => (
-            report.lat && report.lng && (
-              <Marker
-                key={report.id}
-                position={[report.lat, report.lng]}
-                icon={createCustomIcon(getPriorityColor(report))}
-                eventHandlers={{
-                  click: () => {
-                    if (report.routeData) {
-                      try {
-                        const parsed = typeof report.routeData === 'string' ? JSON.parse(report.routeData) : report.routeData;
-                        setActiveRoute(parsed);
-                      } catch (e) {
-                        console.error("Failed to parse route data", e);
-                      }
-                    } else {
-                      setActiveRoute(null);
+        {reports.map((report) => (
+          report.lat && report.lng && (
+            <Marker
+              key={report.id}
+              position={[report.lat, report.lng]}
+              icon={createCustomIcon(getPriorityColor(report))}
+              eventHandlers={{
+                click: () => {
+                  if (report.routeData) {
+                    try {
+                      const parsed = typeof report.routeData === 'string' ? JSON.parse(report.routeData) : report.routeData;
+                      setActiveRoute(parsed);
+                    } catch (e) {
+                      console.error("Failed to parse route data", e);
                     }
+                  } else {
+                    setActiveRoute(null);
                   }
-                }}
-              >
-                <Popup>
-                  <div style={{ color: '#333', minWidth: '200px' }}>
-                    <h4 style={{ margin: 0 }}>{report.title || report.category}</h4>
+                }
+              }}
+            >
+              <Popup>
+                <div style={{ color: '#333', minWidth: '200px' }}>
+                  <h4 style={{ margin: 0 }}>{report.title || report.category}</h4>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem 0', fontSize: '0.8rem', color: '#666' }}>
-                      <User size={14} />
-                      <span>Pelapor: {report.reporterName || 'Sistem AI'}</span>
-                      {report.reporterTrust && (
-                        <span style={{ background: '#e0f2f1', color: '#00796b', padding: '1px 4px', borderRadius: '4px' }}>
-                          Score: {report.reporterTrust}
-                        </span>
-                      )}
-                    </div>
-
-                    <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>{report.description}</p>
-
-                    <div style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>
-                      <div><strong>Status:</strong> {report.status}</div>
-                      <div><strong>Priority:</strong> {report.priorityLevel}</div>
-                    </div>
-
-                    {/* VOTING SYSTEM */}
-                    {report.source === 'user' && (
-                      <div style={{ borderTop: '1px solid #eee', paddingTop: '0.8rem', marginTop: '0.8rem' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem' }}>Verifikasi Laporan Ini:</div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button onClick={() => handleVote(report.id, 'upvote')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: '#10b981', color: 'white', border: 'none', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer' }}>
-                            <CheckCircle size={14} /> {report.upvotes} Setuju
-                          </button>
-                          <button onClick={() => handleVote(report.id, 'downvote')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: '#ef4444', color: 'white', border: 'none', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer' }}>
-                            <AlertTriangle size={14} /> {report.downvotes} Hoax
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {report.url && (
-                      <div style={{ marginTop: '0.5rem' }}>
-                        <a href={report.url} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', fontSize: '0.85rem' }}>Baca Berita Asli</a>
-                      </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem 0', fontSize: '0.8rem', color: '#666' }}>
+                    <User size={14} />
+                    <span>Pelapor: {report.reporterName || 'Sistem AI'}</span>
+                    {report.reporterTrust && (
+                      <span style={{ background: '#e0f2f1', color: '#00796b', padding: '1px 4px', borderRadius: '4px' }}>
+                        Score: {report.reporterTrust}
+                      </span>
                     )}
                   </div>
-                </Popup>
-              </Marker>
-            )
-          ))}
+
+                  <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>{report.description}</p>
+
+                  <div style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>
+                    <div><strong>Status:</strong> {report.status}</div>
+                    <div><strong>Priority:</strong> {report.priorityLevel}</div>
+                  </div>
+
+                  {/* VOTING SYSTEM */}
+                  {report.source === 'user' && (
+                    <div style={{ borderTop: '1px solid #eee', paddingTop: '0.8rem', marginTop: '0.8rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem' }}>Verifikasi Laporan Ini:</div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => handleVote(report.id, 'upvote')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: '#10b981', color: 'white', border: 'none', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer' }}>
+                          <CheckCircle size={14} /> {report.upvotes} Setuju
+                        </button>
+                        <button onClick={() => handleVote(report.id, 'downvote')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: '#ef4444', color: 'white', border: 'none', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer' }}>
+                          <AlertTriangle size={14} /> {report.downvotes} Hoax
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {report.url && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <a href={report.url} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', fontSize: '0.85rem' }}>Baca Berita Asli</a>
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          )
+        ))}
 
 
         <MapNavigation
@@ -507,6 +513,29 @@ const MapDashboard = ({
           setShowTraffic={setShowTraffic}
           setShowTomTomWarning={setShowTomTomWarning}
         />
+
+        {isDrawingMode && drawingPath.length > 0 && (
+          <Polyline
+            positions={drawingPath}
+            color="#f59e0b"
+            weight={6}
+            opacity={0.9}
+            dashArray="5, 10"
+            pathOptions={{ lineCap: 'round', lineJoin: 'round' }}
+          />
+        )}
+        {isDrawingMode && drawingPath.map((pt, idx) => (
+          <Marker
+            key={`draw-pt-${idx}`}
+            position={pt}
+            icon={L.divIcon({
+              className: 'custom-draw-marker',
+              html: `<div style="background-color: #f59e0b; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);"></div>`,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6]
+            })}
+          />
+        ))}
 
         {activeRoute && Array.isArray(activeRoute) && (
           <Polyline
@@ -603,21 +632,70 @@ const MapDashboard = ({
         <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
           <button
             className="btn-primary"
-            style={{ borderRadius: '8px', padding: '0.6rem 1.2rem', boxShadow: 'var(--shadow-glass)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-            onClick={() => setIsModalOpen(true)}
+            style={{ 
+              borderRadius: '8px', 
+              padding: '0.6rem 1.2rem', 
+              boxShadow: 'var(--shadow-glass)', 
+              fontSize: '0.8rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+              border: 'none'
+            }}
+            onClick={() => {
+              setIsDrawingMode(false);
+              setIsRoutingMode(false);
+              setIsModalOpen(true);
+            }}
           >
-            <Plus size={14} /> Report Issue
+            <Plus size={14} /> Lapor Kejadian
+          </button>
+
+          <button
+            className="btn-primary"
+            style={{ 
+              borderRadius: '8px', 
+              padding: '0.6rem 1.2rem', 
+              boxShadow: 'var(--shadow-glass)', 
+              fontSize: '0.8rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              background: isDrawingMode ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)' : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              border: 'none',
+              transition: 'all 0.3s'
+            }}
+            onClick={() => {
+              if (isDrawingMode) {
+                setIsDrawingMode(false);
+                setDrawingPath([]);
+              } else {
+                setIsDrawingMode(true);
+                setDrawingPath([]);
+                setIsRoutingMode(false);
+                alert("Mode Menggambar Aktif: Silakan klik beberapa kali pada peta untuk menggambar garis jalan alternatif Anda secara bebas.");
+              }
+            }}
+          >
+            <Route size={14} /> 
+            {isDrawingMode ? 'Batal Gambar' : 'Gambar Jalan Alternatif'}
           </button>
         </div>
       </div>
 
       {isModalOpen && (
         <ReportModal
-          onClose={() => { setIsModalOpen(false); setIsRoutingMode(false); }}
-          onSuccess={() => { setIsModalOpen(false); setIsRoutingMode(false); fetchData(); }}
+          onClose={() => { setIsModalOpen(false); }}
+          onSuccess={() => { 
+            setIsModalOpen(false); 
+            setIsDrawingMode(false); 
+            setDrawingPath([]); 
+            fetchData(); 
+          }}
           currentCenter={center}
           userId={user?.id}
-          routeData={isRoutingMode ? currentRouteWaypoints : null}
+          routeData={isDrawingMode ? drawingPath : (isRoutingMode ? currentRouteWaypoints : null)}
         />
       )}
       {/* Routing UI Panel */}
@@ -755,7 +833,7 @@ const MapDashboard = ({
               <div>1. Dapatkan API Key gratis di <a href="https://developer.tomtom.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', textDecoration: 'underline' }}>developer.tomtom.com</a></div>
               <div>2. Tambahkan variabel lingkungan ini ke file <code>.env</code> Anda:</div>
               <code style={{ background: '#000', padding: '4px 6px', borderRadius: '4px', fontSize: '0.65rem', display: 'block', color: '#a5b4fc', wordBreak: 'break-all', marginTop: '4px' }}>
-                VITE_TOMTOM_API_KEY=Kunci_API_Anda
+                VITE_TOMTOM_API_KEY=kRAo0gzd7MIGCivBHuEAys691UAknLnJ
               </code>
             </div>
 
@@ -776,6 +854,125 @@ const MapDashboard = ({
             >
               Saya Mengerti
             </button>
+          </div>
+        </div>
+      )}
+
+      {isDrawingMode && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          width: '90%',
+          maxWidth: '400px',
+          animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
+          <div className="glass-panel" style={{
+            padding: '1rem',
+            background: 'rgba(15, 15, 20, 0.95)',
+            border: '1px solid rgba(245, 158, 11, 0.4)',
+            boxShadow: '0 8px 32px rgba(245, 158, 11, 0.15)',
+            borderRadius: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.8rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#f59e0b',
+                animation: 'drawPulse 1.5s infinite'
+              }}></div>
+              <div style={{ fontSize: '0.8rem', color: 'white', fontWeight: '600' }}>
+                Mode Menggambar Jalan Alternatif
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+              Klik pada peta secara berurutan untuk membentuk rute jalan alternatif Anda sendiri tanpa batasan jalan resmi.
+            </p>
+
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              background: 'rgba(255, 255, 255, 0.02)', 
+              padding: '6px 12px', 
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              color: '#f59e0b',
+              fontWeight: '600'
+            }}>
+              <span>Titik Koordinat:</span>
+              <span>{drawingPath.length} Titik</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                disabled={drawingPath.length === 0}
+                onClick={() => setDrawingPath(prev => prev.slice(0, -1))}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: drawingPath.length === 0 ? 'rgba(255,255,255,0.2)' : 'white',
+                  fontSize: '0.7rem',
+                  cursor: drawingPath.length === 0 ? 'not-allowed' : 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Undo
+              </button>
+
+              <button
+                disabled={drawingPath.length === 0}
+                onClick={() => setDrawingPath([])}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: drawingPath.length === 0 ? 'rgba(239,68,68,0.2)' : '#fca5a5',
+                  fontSize: '0.7rem',
+                  cursor: drawingPath.length === 0 ? 'not-allowed' : 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Reset
+              </button>
+
+              <button
+                disabled={drawingPath.length < 2}
+                onClick={() => {
+                  if (!user) {
+                    setShowLogin(true);
+                    return;
+                  }
+                  setIsModalOpen(true);
+                }}
+                style={{
+                  flex: 1.5,
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                  border: 'none',
+                  color: drawingPath.length < 2 ? 'rgba(255,255,255,0.3)' : 'white',
+                  fontSize: '0.7rem',
+                  cursor: drawingPath.length < 2 ? 'not-allowed' : 'pointer',
+                  fontWeight: '700',
+                  boxShadow: drawingPath.length < 2 ? 'none' : '0 4px 12px rgba(217, 119, 6, 0.3)'
+                }}
+              >
+                Laporkan Jalan
+              </button>
+            </div>
           </div>
         </div>
       )}
