@@ -36,7 +36,7 @@ const Navigation = ({ showCCTV, setShowCCTV, user, logout, setShowLogin, setIsRe
           <img src={logoImage} alt="WargaLyzer Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }}
             className="logo-img"
           />
-          <span>WargaLyzer</span>
+          <span>WargaMap</span>
         </Link>
         <div className="nav-links">
           <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
