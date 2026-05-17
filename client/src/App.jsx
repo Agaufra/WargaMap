@@ -242,7 +242,7 @@ function App() {
           onAngkotSelect={setActiveAngkotRoute}
         />
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, width: '100%' }}>
           <SituationBar
             viewMode={viewMode}
             setViewMode={setViewMode}

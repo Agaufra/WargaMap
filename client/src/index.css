@@ -84,6 +84,7 @@ h6 {
   z-index: 5000;
   height: 60px;
   position: relative;
+  width: 100%;
 }
 
 .nav-left {
@@ -1537,6 +1538,7 @@ h6 {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  width: 100%;
 }
 
 .main-map-section {
@@ -1545,6 +1547,7 @@ h6 {
   display: flex;
   overflow: hidden;
   min-height: 0;
+  width: 100%;
 }
 
 .bottom-monitor-section {
@@ -1676,6 +1679,10 @@ h6 {
   .app-main-layout.bottom-collapsed .main-map-section {
     flex: 1 1 100%;
     height: 100%;
+  }
+
+  .map-container-wrapper {
+    width: 100% !important;
   }
 
   .bottom-monitor-section {
