@@ -858,7 +858,7 @@ const MapDashboard = ({
         </div>
       )}
 
-      {isDrawingMode && (
+      {isDrawingMode && !isModalOpen && (
         <div style={{
           position: 'fixed',
           bottom: '80px',
