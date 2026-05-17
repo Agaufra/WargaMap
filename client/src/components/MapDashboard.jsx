@@ -65,6 +65,20 @@ const createUserIcon = () => {
 };
 
 
+const fetchRouteSegment = async (start, end) => {
+  try {
+    const res = await axios.get(`https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`);
+    if (res.data && res.data.routes && res.data.routes.length > 0) {
+      const coords = res.data.routes[0].geometry.coordinates;
+      return coords.map(c => [c[1], c[0]]);
+    }
+  } catch (err) {
+    console.error("OSRM routing segment failed, falling back to straight line", err);
+  }
+  return [[start.lat, start.lng], [end.lat, end.lng]];
+};
+
+
 const getPriorityColor = (report) => {
   if (report.source === 'news') return '#3b82f6';
   switch (report.priorityLevel) {
@@ -94,6 +108,43 @@ const MapDashboard = ({
   const [showTomTomWarning, setShowTomTomWarning] = useState(false);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawingPath, setDrawingPath] = useState([]);
+  const [drawingMethod, setDrawingMethod] = useState('freeform'); // 'freeform' or 'road'
+  const [drawingWaypoints, setDrawingWaypoints] = useState([]);
+
+  useEffect(() => {
+    const calculatePath = async () => {
+      if (drawingWaypoints.length === 0) {
+        setDrawingPath([]);
+        return;
+      }
+      if (drawingWaypoints.length === 1) {
+        setDrawingPath([[drawingWaypoints[0].lat, drawingWaypoints[0].lng]]);
+        return;
+      }
+
+      let fullPath = [];
+      fullPath.push([drawingWaypoints[0].lat, drawingWaypoints[0].lng]);
+
+      for (let i = 1; i < drawingWaypoints.length; i++) {
+        const prev = drawingWaypoints[i - 1];
+        const curr = drawingWaypoints[i];
+
+        if (curr.method === 'road') {
+          try {
+            const segment = await fetchRouteSegment(prev, curr);
+            fullPath = [...fullPath, ...segment.slice(1)];
+          } catch (e) {
+            fullPath.push([curr.lat, curr.lng]);
+          }
+        } else {
+          fullPath.push([curr.lat, curr.lng]);
+        }
+      }
+      setDrawingPath(fullPath);
+    };
+
+    calculatePath();
+  }, [drawingWaypoints]);
 
   // Routing Panel States
   const [routeStats, setRouteStats] = useState(null);
@@ -312,7 +363,8 @@ const MapDashboard = ({
       click: (e) => {
         const { lat, lng } = e.latlng;
         if (isDrawingMode) {
-          setDrawingPath(prev => [...prev, [lat, lng]]);
+          const newWp = { lat, lng, method: drawingMethod };
+          setDrawingWaypoints(prev => [...prev, newWp]);
           return;
         }
         const newLoc = { lat, lng };
@@ -670,9 +722,11 @@ const MapDashboard = ({
               if (isDrawingMode) {
                 setIsDrawingMode(false);
                 setDrawingPath([]);
+                setDrawingWaypoints([]);
               } else {
                 setIsDrawingMode(true);
                 setDrawingPath([]);
+                setDrawingWaypoints([]);
                 setIsRoutingMode(false);
                 alert("Mode Menggambar Aktif: Silakan klik beberapa kali pada peta untuk menggambar garis jalan alternatif Anda secara bebas.");
               }
@@ -691,6 +745,7 @@ const MapDashboard = ({
             setIsModalOpen(false); 
             setIsDrawingMode(false); 
             setDrawingPath([]); 
+            setDrawingWaypoints([]); 
             fetchData(); 
           }}
           currentCenter={center}
@@ -893,8 +948,59 @@ const MapDashboard = ({
             </div>
 
             <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
-              Klik pada peta secara berurutan untuk membentuk rute jalan alternatif Anda sendiri tanpa batasan jalan resmi.
+              Klik pada peta secara berurutan untuk membentuk rute jalan alternatif Anda sendiri.
             </p>
+
+            {/* Segmented Line Connection Toggle */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>
+                Koneksi Garis Peta:
+              </span>
+              <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '2px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <button
+                  onClick={() => setDrawingMethod('freeform')}
+                  style={{
+                    flex: 1,
+                    padding: '6px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: drawingMethod === 'freeform' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    color: drawingMethod === 'freeform' ? '#f59e0b' : 'rgba(255,255,255,0.5)',
+                    fontSize: '0.65rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  ✏️ Garis Bebas
+                </button>
+                <button
+                  onClick={() => setDrawingMethod('road')}
+                  style={{
+                    flex: 1,
+                    padding: '6px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: drawingMethod === 'road' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    color: drawingMethod === 'road' ? '#f59e0b' : 'rgba(255,255,255,0.5)',
+                    fontSize: '0.65rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🤖 Ikuti Jalan
+                </button>
+              </div>
+            </div>
 
             <div style={{ 
               display: 'flex', 
@@ -908,22 +1014,22 @@ const MapDashboard = ({
               fontWeight: '600'
             }}>
               <span>Titik Koordinat:</span>
-              <span>{drawingPath.length} Titik</span>
+              <span>{drawingWaypoints.length} Titik</span>
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                disabled={drawingPath.length === 0}
-                onClick={() => setDrawingPath(prev => prev.slice(0, -1))}
+                disabled={drawingWaypoints.length === 0}
+                onClick={() => setDrawingWaypoints(prev => prev.slice(0, -1))}
                 style={{
                   flex: 1,
                   padding: '0.5rem',
                   borderRadius: '6px',
                   background: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: drawingPath.length === 0 ? 'rgba(255,255,255,0.2)' : 'white',
+                  color: drawingWaypoints.length === 0 ? 'rgba(255,255,255,0.2)' : 'white',
                   fontSize: '0.7rem',
-                  cursor: drawingPath.length === 0 ? 'not-allowed' : 'pointer',
+                  cursor: drawingWaypoints.length === 0 ? 'not-allowed' : 'pointer',
                   fontWeight: '600'
                 }}
               >
@@ -931,17 +1037,17 @@ const MapDashboard = ({
               </button>
 
               <button
-                disabled={drawingPath.length === 0}
-                onClick={() => setDrawingPath([])}
+                disabled={drawingWaypoints.length === 0}
+                onClick={() => setDrawingWaypoints([])}
                 style={{
                   flex: 1,
                   padding: '0.5rem',
                   borderRadius: '6px',
                   background: 'rgba(239, 68, 68, 0.1)',
                   border: '1px solid rgba(239, 68, 68, 0.2)',
-                  color: drawingPath.length === 0 ? 'rgba(239,68,68,0.2)' : '#fca5a5',
+                  color: drawingWaypoints.length === 0 ? 'rgba(239,68,68,0.2)' : '#fca5a5',
                   fontSize: '0.7rem',
-                  cursor: drawingPath.length === 0 ? 'not-allowed' : 'pointer',
+                  cursor: drawingWaypoints.length === 0 ? 'not-allowed' : 'pointer',
                   fontWeight: '600'
                 }}
               >
@@ -949,7 +1055,7 @@ const MapDashboard = ({
               </button>
 
               <button
-                disabled={drawingPath.length < 2}
+                disabled={drawingWaypoints.length < 2}
                 onClick={() => {
                   if (!user) {
                     setShowLogin(true);
@@ -963,11 +1069,11 @@ const MapDashboard = ({
                   borderRadius: '6px',
                   background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
                   border: 'none',
-                  color: drawingPath.length < 2 ? 'rgba(255,255,255,0.3)' : 'white',
+                  color: drawingWaypoints.length < 2 ? 'rgba(255,255,255,0.3)' : 'white',
                   fontSize: '0.7rem',
-                  cursor: drawingPath.length < 2 ? 'not-allowed' : 'pointer',
+                  cursor: drawingWaypoints.length < 2 ? 'not-allowed' : 'pointer',
                   fontWeight: '700',
-                  boxShadow: drawingPath.length < 2 ? 'none' : '0 4px 12px rgba(217, 119, 6, 0.3)'
+                  boxShadow: drawingWaypoints.length < 2 ? 'none' : '0 4px 12px rgba(217, 119, 6, 0.3)'
                 }}
               >
                 Laporkan Jalan
